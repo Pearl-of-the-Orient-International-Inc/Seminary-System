@@ -39,6 +39,7 @@ const formSchema = z.object({
 });
 
 export type ClassDialogValues = z.infer<typeof formSchema>;
+type ClassDialogInputValues = z.input<typeof formSchema>;
 
 type ClassDialogProps = {
   open: boolean;
@@ -53,7 +54,7 @@ export const ClassDialog = ({
   onSubmit,
   record,
 }: ClassDialogProps) => {
-  const form = useForm<ClassDialogValues>({
+  const form = useForm<ClassDialogInputValues, unknown, ClassDialogValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       className: "",
@@ -154,7 +155,10 @@ export const ClassDialog = ({
                   <Input
                     min={1}
                     type="number"
-                    {...field}
+                    name={field.name}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
+                    value={typeof field.value === "number" ? field.value : ""}
                     onChange={(event) => field.onChange(event.target.value)}
                   />
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

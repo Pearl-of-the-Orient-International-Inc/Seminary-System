@@ -478,7 +478,9 @@ const CheckboxGroupField = <TFieldValues extends FieldValues>({
     control={control}
     name={name}
     render={({ field, fieldState }) => {
-      const selectedValues = Array.isArray(field.value) ? field.value : [];
+      const selectedValues: string[] = Array.isArray(field.value)
+        ? field.value
+        : [];
 
       const toggleOption = (checked: boolean, option: string) => {
         if (checked) {

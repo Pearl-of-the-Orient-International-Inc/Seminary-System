@@ -337,7 +337,9 @@ const Page = () => {
       totalMarks: values.totalMarks,
       additionalInstructions: values.additionalInstructions ?? "",
       allowLateSubmission: values.allowLateSubmission,
-      lateSubmissionDeadline: values.lateSubmissionDeadline ?? "",
+      lateSubmissionDeadline: values.lateSubmissionDeadline
+        ? formatDateLabel(values.lateSubmissionDeadline)
+        : "",
       notifyStudents: values.notifyStudents,
       attachmentLabel: values.attachmentLabel ?? "",
     };
