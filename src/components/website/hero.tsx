@@ -62,7 +62,7 @@ const Hero = () => {
 
           <div className="hidden justify-center lg:flex">
             <Image
-              src="/main/badge.png"
+              src="/main/logo.png"
               alt="Pearl of The Orient Theological Seminary and Colleges seal"
               width={330}
               height={330}
