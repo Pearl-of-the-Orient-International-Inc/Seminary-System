@@ -248,8 +248,10 @@ export const mapSeminaryApplicationToEnrollmentRecord = (
   paymentStatus: application.payment
     ? paymentStatusLabelMap[application.payment.status] ?? "For Verification"
     : "Awaiting Proof",
-  program: application.programCourse,
-  programLevel: programLevelLabelMap[application.programLevel] ?? "Certificate",
+  program: application.programCourse ?? "No program set",
+  programLevel: application.programLevel
+    ? (programLevelLabelMap[application.programLevel] ?? "Certificate")
+    : "Certificate",
   status: statusLabelMap[application.status] ?? "Pending",
   studentId:
     application.studentId ?? application.member?.uniqueId ?? "Pending student ID",

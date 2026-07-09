@@ -1,3 +1,5 @@
+import type { SeminaryApplicationDetails } from "@/features/seminary/seminary.types";
+
 export type StudentStatus =
   | "Active"
   | "Graduating"
@@ -24,6 +26,7 @@ export type StudentRecord = {
   status: StudentStatus;
   townCity: string;
   yearLevel: string;
+  application?: SeminaryApplicationDetails;
 };
 
 export const academicYearOptions = [

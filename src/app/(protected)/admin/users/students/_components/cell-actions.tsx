@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import {
+  Barcode,
+  Pencil,
   MoreHorizontal,
-  SquareArrowOutUpRight,
+  QrCode,
   UserCheck,
-  UserRoundSearch,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,14 +22,16 @@ import type { StudentRecord } from "./student-data";
 
 type CellActionsProps = {
   data: StudentRecord;
+  onGenerateBarcode: (record: StudentRecord) => void;
+  onGenerateQrCode: (record: StudentRecord) => void;
   onToggleStatus: (record: StudentRecord) => void;
-  onView: (record: StudentRecord) => void;
 };
 
 export const CellActions = ({
   data,
+  onGenerateBarcode,
+  onGenerateQrCode,
   onToggleStatus,
-  onView,
 }: CellActionsProps) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
@@ -37,18 +41,24 @@ export const CellActions = ({
     </DropdownMenuTrigger>
 
     <DropdownMenuContent align="end" className="w-48">
-      <DropdownMenuItem onClick={() => onView(data)}>
-        <UserRoundSearch className="size-4" />
-        View student
+      <DropdownMenuItem asChild>
+        <Link href={`/admin/users/students/${encodeURIComponent(data.id)}`}>
+          <Pencil className="size-4" />
+          Edit profile
+        </Link>
       </DropdownMenuItem>
       <DropdownMenuItem onClick={() => onToggleStatus(data)}>
         <UserCheck className="size-4" />
         {data.status === "Active" ? "Set inactive" : "Set active"}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
-      <DropdownMenuItem>
-        <SquareArrowOutUpRight className="size-4" />
-        Open profile
+      <DropdownMenuItem onClick={() => onGenerateBarcode(data)}>
+        <Barcode className="size-4" />
+        Generate barcode
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => onGenerateQrCode(data)}>
+        <QrCode className="size-4" />
+        Generate QR code
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>

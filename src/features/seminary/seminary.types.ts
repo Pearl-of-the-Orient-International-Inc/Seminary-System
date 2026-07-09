@@ -89,14 +89,85 @@ export type SeminaryApplicationStatus =
 
 export type SeminaryPaymentStatus = "PENDING" | "VERIFIED" | "REJECTED";
 
+export type SeminaryStudentStatus =
+  | "ACTIVE"
+  | "GRADUATING"
+  | "LEAVE_OF_ABSENCE"
+  | "INACTIVE";
+
+export type SeminaryEnrollmentType =
+  | "REGULAR"
+  | "TRANSFEREE"
+  | "CROSS_ENROLLEE";
+
+export type SeminaryCredentialDocumentType =
+  | "DIPLOMA"
+  | "CERTIFICATE"
+  | "TRANSCRIPT";
+
+export type SeminaryCredentialDocumentStatus = "ACTIVE" | "REVOKED" | "VOID";
+
+export interface SeminaryCredentialDocument {
+  id: string;
+  documentNumber: string;
+  barcodeNumber: string | null;
+  verificationToken: string;
+  type: SeminaryCredentialDocumentType;
+  status: SeminaryCredentialDocumentStatus;
+  title: string | null;
+  remarks: string | null;
+  issuedAt: string;
+  revokedAt: string | null;
+  applicationId: string;
+  createdAt: string;
+  updatedAt: string;
+  application?: {
+    id: string;
+    studentId: string | null;
+    surname: string | null;
+    givenName: string | null;
+    middleName: string | null;
+    programLevel: string | null;
+    programCourse: string | null;
+    academicYear: string | null;
+  };
+}
+
+export interface SeminaryStudentPayload {
+  studentId?: string;
+  academicYear?: string;
+  surname?: string;
+  givenName?: string;
+  middleName?: string;
+  gender?: string;
+  emailAddress?: string;
+  mobilePhone?: string;
+  homeAddress?: string;
+  birthPlace?: string;
+  civilStatus?: string;
+  churchAttended?: string;
+  churchAddress?: string;
+  pastorName?: string;
+  contactNumber?: string;
+  ministryInvolved?: string;
+  programLevel?: string;
+  programCourse?: string;
+  enrollmentType?: string;
+  yearLevel?: string;
+  studentStatus?: string;
+}
+
 export interface SeminaryApplicationDetails {
   id: string;
   status: SeminaryApplicationStatus;
   targetMemberType: string;
   studentId: string | null;
+  studentStatus: SeminaryStudentStatus;
+  enrollmentType: SeminaryEnrollmentType;
+  yearLevel: string | null;
   academicYear: string | null;
-  surname: string;
-  givenName: string;
+  surname: string | null;
+  givenName: string | null;
   middleName: string | null;
   emailAddress: string | null;
   mobilePhone: string | null;
@@ -114,8 +185,8 @@ export interface SeminaryApplicationDetails {
   pastorName: string | null;
   contactNumber: string | null;
   ministryInvolved: string | null;
-  programLevel: string;
-  programCourse: string;
+  programLevel: string | null;
+  programCourse: string | null;
   highSchool: string | null;
   highSchoolYearGraduated: string | null;
   collegeSchool: string | null;
@@ -175,6 +246,7 @@ export interface SeminaryApplicationDetails {
     proofOfReceiptMimeType: string | null;
     proofOfReceiptFileSize: string | null;
   } | null;
+  credentialDocuments?: SeminaryCredentialDocument[];
 }
 
 export interface SeminaryApplicationsResponse {
@@ -187,4 +259,40 @@ export interface SeminaryApplicationsResponse {
     total: number;
     totalPages: number;
   };
+}
+
+export interface SeminaryStudentResponse {
+  code: string;
+  message: string;
+  data: SeminaryApplicationDetails;
+}
+
+export interface SeminaryStudentsResponse {
+  code: string;
+  message: string;
+  data: SeminaryApplicationDetails[];
+  meta?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface SeminaryStudentBulkImportResponse {
+  code: string;
+  message: string;
+  data: SeminaryApplicationDetails[];
+}
+
+export interface SeminaryCredentialDocumentResponse {
+  code: string;
+  message: string;
+  data: SeminaryCredentialDocument;
+}
+
+export interface SeminaryCredentialDocumentsResponse {
+  code: string;
+  message: string;
+  data: SeminaryCredentialDocument[];
 }

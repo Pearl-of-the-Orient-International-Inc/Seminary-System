@@ -5,8 +5,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   BookOpenCheck,
+  FileSpreadsheet,
   Filter,
   GraduationCap,
+  Plus,
   ShieldCheck,
   UserRoundCheck,
   UsersRound,
@@ -14,14 +16,7 @@ import {
 import type { Row } from "@tanstack/react-table";
 
 import { GlobalDataTable } from "@/components/DataTable";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -30,10 +25,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  useSeminaryStudentsQuery,
+  useUpdateSeminaryStudentMutation,
+} from "@/features/seminary/seminary.hooks";
+import type {
+  SeminaryApplicationDetails,
+  SeminaryStudentPayload,
+} from "@/features/seminary/seminary.types";
 
 import { StatCard } from "../../academics/classes/_components/stat-card";
+import { BulkImportDialog } from "./_components/bulk-import-dialog";
 import { CellActions } from "./_components/cell-actions";
 import { columns } from "./_components/columns";
+import { StudentBarcodeDialog } from "./_components/student-barcode-dialog";
 import {
   academicYearOptions,
   programLevelOptions,
@@ -42,11 +47,79 @@ import {
   type StudentRecord,
   type StudentStatus,
 } from "./_components/student-data";
-import { StudentDetailsDialog } from "./_components/student-details-dialog";
+import { StudentQrCodeDialog } from "./_components/student-qr-code-dialog";
 
 type StatusFilter = "ALL" | StudentStatus;
 type AcademicYearFilter = "ALL" | (typeof academicYearOptions)[number];
 type ProgramLevelFilter = "ALL" | ProgramLevel;
+
+const programLevelLabelMap: Record<string, ProgramLevel> = {
+  CERTIFICATE: "Certificate",
+  BACHELOR: "Bachelor",
+  MASTER_WITH_THESIS: "Masteral",
+  DOCTORATE_WITH_DISSERTATION: "Doctorate",
+};
+
+const enrollmentTypeLabelMap = {
+  REGULAR: "Regular",
+  TRANSFEREE: "Transferee",
+  CROSS_ENROLLEE: "Cross Enrollee",
+} as const;
+
+const studentStatusLabelMap = {
+  ACTIVE: "Active",
+  GRADUATING: "Graduating",
+  LEAVE_OF_ABSENCE: "Leave of Absence",
+  INACTIVE: "Inactive",
+} as const;
+
+const toStudentRecord = (
+  application: SeminaryApplicationDetails,
+): StudentRecord => ({
+  academicYear: application.academicYear ?? "2025-2026",
+  application,
+  contactNumber: application.mobilePhone ?? "",
+  email: application.emailAddress ?? "",
+  enrollmentType: enrollmentTypeLabelMap[application.enrollmentType],
+  id: application.studentId ?? application.id,
+  name: [application.givenName, application.middleName, application.surname]
+    .filter(Boolean)
+    .join(" ") || "Unnamed Student",
+  program: application.programCourse ?? "No program set",
+  programLevel: application.programLevel
+    ? programLevelLabelMap[application.programLevel]
+    : "Certificate",
+  status: studentStatusLabelMap[application.studentStatus],
+  townCity: application.homeAddress ?? "",
+  yearLevel: application.yearLevel ?? "Foundation",
+});
+
+const toStudentPayload = (
+  application: SeminaryApplicationDetails,
+  status: StudentStatus,
+): SeminaryStudentPayload => ({
+  academicYear: application.academicYear ?? "",
+  birthPlace: application.birthPlace ?? "",
+  churchAddress: application.churchAddress ?? "",
+  churchAttended: application.churchAttended ?? "",
+  civilStatus: application.civilStatus ?? "",
+  contactNumber: application.contactNumber ?? "",
+  emailAddress: application.emailAddress ?? "",
+  enrollmentType: enrollmentTypeLabelMap[application.enrollmentType],
+  givenName: application.givenName ?? "",
+  homeAddress: application.homeAddress ?? "",
+  middleName: application.middleName ?? "",
+  ministryInvolved: application.ministryInvolved ?? "",
+  mobilePhone: application.mobilePhone ?? "",
+  pastorName: application.pastorName ?? "",
+  programCourse: application.programCourse ?? "",
+  programLevel: application.programLevel
+    ? programLevelLabelMap[application.programLevel]
+    : "Certificate",
+  studentStatus: status,
+  surname: application.surname ?? "",
+  yearLevel: application.yearLevel ?? "Foundation",
+});
 
 const Page = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
@@ -54,9 +127,20 @@ const Page = () => {
     useState<AcademicYearFilter>("ALL");
   const [programLevelFilter, setProgramLevelFilter] =
     useState<ProgramLevelFilter>("ALL");
-  const [students, setStudents] = useState<StudentRecord[]>(studentRecords);
   const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [barcodeOpen, setBarcodeOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [qrCodeOpen, setQrCodeOpen] = useState(false);
+  const studentsQuery = useSeminaryStudentsQuery({ limit: 100 });
+  const updateStudentMutation = useUpdateSeminaryStudentMutation();
+
+  const students = useMemo(
+    () =>
+      studentsQuery.data?.data?.length
+        ? studentsQuery.data.data.map(toStudentRecord)
+        : studentRecords,
+    [studentsQuery.data],
+  );
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
@@ -84,28 +168,35 @@ const Page = () => {
     ["Masteral", "Doctorate"].includes(student.programLevel),
   ).length;
 
-  const openStudentDetails = (student: StudentRecord) => {
-    setSelectedStudent(student);
-    setDetailsOpen(true);
+  const handleToggleStatus = (record: StudentRecord) => {
+    const application = record.application;
+
+    if (!application?.studentId) {
+      return;
+    }
+
+    const nextStatus = record.status === "Active" ? "Inactive" : "Active";
+    updateStudentMutation.mutate({
+      payload: toStudentPayload(application, nextStatus),
+      studentId: application.studentId,
+    });
   };
 
-  const handleToggleStatus = (record: StudentRecord) => {
-    setStudents((current) =>
-      current.map((student) =>
-        student.id === record.id
-          ? {
-              ...student,
-              status: student.status === "Active" ? "Inactive" : "Active",
-            }
-          : student,
-      ),
-    );
+  const openBarcodeDialog = (student: StudentRecord) => {
+    setSelectedStudent(student);
+    setBarcodeOpen(true);
+  };
+
+  const openQrCodeDialog = (student: StudentRecord) => {
+    setSelectedStudent(student);
+    setQrCodeOpen(true);
   };
 
   const renderCellActions = (row: Row<StudentRecord>) => (
     <CellActions
       data={row.original}
-      onView={openStudentDetails}
+      onGenerateBarcode={openBarcodeDialog}
+      onGenerateQrCode={openQrCodeDialog}
       onToggleStatus={handleToggleStatus}
     />
   );
@@ -118,37 +209,36 @@ const Page = () => {
             <h1 className="font-serif text-4xl text-emerald-950 dark:text-emerald-50">
               Students
             </h1>
-            <p className="text-sm leading-6 text-muted-foreground">
+            <p className="text-sm max-w-2xl text-muted-foreground">
               Monitor enrolled seminarians and chaplaincy students across
               certificate, bachelor, masteral, and doctoral programs in one
               consistent registry.
             </p>
           </div>
 
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/admin/dashboard">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Users</BreadcrumbPage>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Students</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <div className="flex flex-col gap-2 sm:flex-row xl:justify-end">
+            <Button asChild>
+              <Link href="/admin/users/students/new">
+                <Plus className="size-4" />
+                Add Student
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBulkImportOpen(true)}
+            >
+              <FileSpreadsheet className="size-4" />
+              Bulk Import Excel
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="Total Students"
             value={totalStudents}
-            description="Across active academic years"
+            description="Across academic years"
             icon={<UsersRound className="size-6" />}
             accentClassName="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
           />
@@ -306,9 +396,18 @@ const Page = () => {
         </Card>
       </section>
 
-      <StudentDetailsDialog
-        open={detailsOpen}
-        onOpenChange={setDetailsOpen}
+      <BulkImportDialog
+        open={bulkImportOpen}
+        onOpenChange={setBulkImportOpen}
+      />
+      <StudentBarcodeDialog
+        open={barcodeOpen}
+        onOpenChange={setBarcodeOpen}
+        student={selectedStudent}
+      />
+      <StudentQrCodeDialog
+        open={qrCodeOpen}
+        onOpenChange={setQrCodeOpen}
         student={selectedStudent}
       />
     </>

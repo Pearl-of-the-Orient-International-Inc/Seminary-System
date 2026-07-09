@@ -67,4 +67,117 @@ export const useUpdateSeminaryApplicationStatusMutation = () => {
   });
 };
 
+export const useSeminaryStudentsQuery = (params?: {
+  academicYear?: string;
+  limit?: number;
+  page?: number;
+  programLevel?: string;
+  search?: string;
+  studentStatus?: string;
+}) =>
+  useQuery({
+    queryKey: ["seminary", "students", params],
+    queryFn: () => seminaryApi.getSeminaryStudents(params),
+    staleTime: 30_000,
+  });
+
+export const useSeminaryStudentQuery = (
+  studentId: string,
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    queryKey: ["seminary", "students", studentId],
+    queryFn: () => seminaryApi.getSeminaryStudent(studentId),
+    enabled: options?.enabled ?? true,
+    staleTime: 30_000,
+  });
+
+export const useCreateSeminaryStudentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryStudent,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "students"],
+      });
+    },
+    meta: { feature: "seminary.student.create" },
+  });
+};
+
+export const useUpdateSeminaryStudentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryStudent,
+    throwOnError: false,
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "students"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "students", variables.studentId],
+      });
+    },
+    meta: { feature: "seminary.student.update" },
+  });
+};
+
+export const useBulkImportSeminaryStudentsMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.bulkImportSeminaryStudents,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "students"],
+      });
+    },
+    meta: { feature: "seminary.student.bulkImport" },
+  });
+};
+
+export const useGenerateSeminaryCredentialDocumentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.generateSeminaryCredentialDocument,
+    throwOnError: false,
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: [
+          "seminary",
+          "students",
+          variables.studentId,
+          "credential-documents",
+        ],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "students", variables.studentId],
+      });
+    },
+    meta: { feature: "seminary.credentialDocument.generate" },
+  });
+};
+
+export const useSeminaryCredentialDocumentsQuery = (
+  params: Parameters<typeof seminaryApi.getSeminaryCredentialDocuments>[0],
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    queryKey: [
+      "seminary",
+      "students",
+      params.studentId,
+      "credential-documents",
+      params.type,
+    ],
+    queryFn: () => seminaryApi.getSeminaryCredentialDocuments(params),
+    enabled: options?.enabled ?? true,
+    staleTime: 30_000,
+  });
+
 export { toApiError };
