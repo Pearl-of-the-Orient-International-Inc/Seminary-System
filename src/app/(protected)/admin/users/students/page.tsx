@@ -56,7 +56,6 @@ import { StudentBarcodeDialog } from "./_components/student-barcode-dialog";
 import {
   academicYearOptions,
   programLevelOptions,
-  studentRecords,
   type ProgramLevel,
   type StudentRecord,
   type StudentStatus,
@@ -162,9 +161,7 @@ const Page = () => {
 
   const students = useMemo(
     () =>
-      studentsQuery.data?.data?.length
-        ? studentsQuery.data.data.map(toStudentRecord)
-        : studentRecords,
+      studentsQuery.data?.data?.map(toStudentRecord) ?? [],
     [studentsQuery.data],
   );
 
