@@ -16,6 +16,7 @@ export const programGroups: ProgramGroup[] = [
       "Certificate in ECE & SPED Management",
       "Certificate in Advanced Ministerial",
       "Certificate in Advanced Theology",
+      "Professional Chaplaincy",
     ],
   },
   {
@@ -72,4 +73,3 @@ export const programLevelOptions = programGroups.map((group) => ({
 
 export const getProgramsByLevel = (level: ProgramLevel) =>
   programGroups.find((group) => group.level === level)?.programs ?? [];
-
