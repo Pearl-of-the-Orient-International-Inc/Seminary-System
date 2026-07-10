@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Plus,
   ShieldCheck,
+  Trash2,
   UserRoundCheck,
   UsersRound,
 } from "lucide-react";
@@ -19,6 +20,16 @@ import { GlobalDataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -26,9 +37,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  useBulkDeleteSeminaryStudentsMutation,
+  useDeleteSeminaryStudentMutation,
   useSeminaryStudentsQuery,
   useUpdateSeminaryStudentMutation,
 } from "@/features/seminary/seminary.hooks";
+import { useToast } from "@/hooks/use-toast";
 import type {
   SeminaryApplicationDetails,
   SeminaryStudentPayload,
@@ -130,9 +144,21 @@ const Page = () => {
   const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null);
   const [barcodeOpen, setBarcodeOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [studentsPendingDelete, setStudentsPendingDelete] = useState<
+    StudentRecord[]
+  >([]);
+  const [clearSelectionAfterDelete, setClearSelectionAfterDelete] = useState<
+    (() => void) | null
+  >(null);
+  const [studentPendingDelete, setStudentPendingDelete] =
+    useState<StudentRecord | null>(null);
   const [qrCodeOpen, setQrCodeOpen] = useState(false);
+  const { toast } = useToast();
   const studentsQuery = useSeminaryStudentsQuery({ limit: 100 });
   const updateStudentMutation = useUpdateSeminaryStudentMutation();
+  const deleteStudentMutation = useDeleteSeminaryStudentMutation();
+  const bulkDeleteStudentsMutation = useBulkDeleteSeminaryStudentsMutation();
 
   const students = useMemo(
     () =>
@@ -182,6 +208,74 @@ const Page = () => {
     });
   };
 
+  const openDeleteDialog = (student: StudentRecord) => {
+    setStudentPendingDelete(student);
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!studentPendingDelete?.application?.studentId) {
+      return;
+    }
+
+    try {
+      await deleteStudentMutation.mutateAsync(
+        studentPendingDelete.application.studentId,
+      );
+      toast({
+        title: "Student deleted",
+        description: `${studentPendingDelete.name} was removed from the registry.`,
+      });
+      setStudentPendingDelete(null);
+    } catch (error) {
+      toast({
+        title: "Delete failed",
+        description:
+          error instanceof Error ? error.message : "Unable to delete student.",
+        variant: "error",
+      });
+    }
+  };
+
+  const openBulkDeleteDialog = (
+    selectedStudents: StudentRecord[],
+    clearSelection: () => void,
+  ) => {
+    setStudentsPendingDelete(selectedStudents);
+    setClearSelectionAfterDelete(() => clearSelection);
+    setBulkDeleteOpen(true);
+  };
+
+  const handleBulkDeleteStudents = async () => {
+    const studentIds = studentsPendingDelete
+      .map((student) => student.application?.studentId)
+      .filter((studentId): studentId is string => Boolean(studentId));
+
+    if (!studentIds.length) {
+      return;
+    }
+
+    try {
+      await bulkDeleteStudentsMutation.mutateAsync({ studentIds });
+      toast({
+        title: "Students deleted",
+        description: `${studentIds.length} selected student${
+          studentIds.length === 1 ? "" : "s"
+        } removed from the registry.`,
+      });
+      clearSelectionAfterDelete?.();
+      setStudentsPendingDelete([]);
+      setClearSelectionAfterDelete(null);
+      setBulkDeleteOpen(false);
+    } catch (error) {
+      toast({
+        title: "Bulk delete failed",
+        description:
+          error instanceof Error ? error.message : "Unable to delete students.",
+        variant: "error",
+      });
+    }
+  };
+
   const openBarcodeDialog = (student: StudentRecord) => {
     setSelectedStudent(student);
     setBarcodeOpen(true);
@@ -195,6 +289,7 @@ const Page = () => {
   const renderCellActions = (row: Row<StudentRecord>) => (
     <CellActions
       data={row.original}
+      onDelete={openDeleteDialog}
       onGenerateBarcode={openBarcodeDialog}
       onGenerateQrCode={openQrCodeDialog}
       onToggleStatus={handleToggleStatus}
@@ -323,6 +418,19 @@ const Page = () => {
               filterPlaceholder="Search student, program, contact, or ID..."
               emptyMessage="No student records found."
               pageSizeOptions={[8, 10, 20]}
+              renderSelectedActions={(selectedRows, { clearSelection }) => (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="xs"
+                  onClick={() =>
+                    openBulkDeleteDialog(selectedRows, clearSelection)
+                  }
+                >
+                  <Trash2 className="size-3.5" />
+                  Delete selected
+                </Button>
+              )}
               toolbarActions={
                 <>
                   <Select
@@ -410,6 +518,78 @@ const Page = () => {
         onOpenChange={setQrCodeOpen}
         student={selectedStudent}
       />
+      <AlertDialog
+        open={Boolean(studentPendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setStudentPendingDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete student?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes{" "}
+              {studentPendingDelete?.name ?? "this student"} and related
+              seminary records. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteStudentMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deleteStudentMutation.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                void handleDeleteStudent();
+              }}
+            >
+              {deleteStudentMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => {
+          setBulkDeleteOpen(open);
+          if (!open) {
+            setStudentsPendingDelete([]);
+            setClearSelectionAfterDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete selected students?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes {studentsPendingDelete.length} selected
+              student{studentsPendingDelete.length === 1 ? "" : "s"} and related
+              seminary records. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleteStudentsMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={bulkDeleteStudentsMutation.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                void handleBulkDeleteStudents();
+              }}
+            >
+              {bulkDeleteStudentsMutation.isPending
+                ? "Deleting..."
+                : "Delete selected"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

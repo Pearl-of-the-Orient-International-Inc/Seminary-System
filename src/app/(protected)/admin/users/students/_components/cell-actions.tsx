@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   Barcode,
+  Trash2,
   Pencil,
   MoreHorizontal,
   QrCode,
@@ -24,11 +25,13 @@ type CellActionsProps = {
   data: StudentRecord;
   onGenerateBarcode: (record: StudentRecord) => void;
   onGenerateQrCode: (record: StudentRecord) => void;
+  onDelete: (record: StudentRecord) => void;
   onToggleStatus: (record: StudentRecord) => void;
 };
 
 export const CellActions = ({
   data,
+  onDelete,
   onGenerateBarcode,
   onGenerateQrCode,
   onToggleStatus,
@@ -59,6 +62,11 @@ export const CellActions = ({
       <DropdownMenuItem onClick={() => onGenerateQrCode(data)}>
         <QrCode className="size-4" />
         Generate QR code
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem variant="destructive" onClick={() => onDelete(data)}>
+        <Trash2 className="size-4" />
+        Delete student
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>

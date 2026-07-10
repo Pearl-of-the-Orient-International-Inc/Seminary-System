@@ -125,6 +125,24 @@ export const useUpdateSeminaryStudentMutation = () => {
   });
 };
 
+export const useDeleteSeminaryStudentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.deleteSeminaryStudent,
+    throwOnError: false,
+    onSuccess: async (_data, studentId) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "students"],
+      });
+      await queryClient.removeQueries({
+        queryKey: ["seminary", "students", studentId],
+      });
+    },
+    meta: { feature: "seminary.student.delete" },
+  });
+};
+
 export const useBulkImportSeminaryStudentsMutation = () => {
   const queryClient = useQueryClient();
 
@@ -137,6 +155,21 @@ export const useBulkImportSeminaryStudentsMutation = () => {
       });
     },
     meta: { feature: "seminary.student.bulkImport" },
+  });
+};
+
+export const useBulkDeleteSeminaryStudentsMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.bulkDeleteSeminaryStudents,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "students"],
+      });
+    },
+    meta: { feature: "seminary.student.bulkDelete" },
   });
 };
 

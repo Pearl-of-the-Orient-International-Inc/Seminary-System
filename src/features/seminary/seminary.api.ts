@@ -111,6 +111,14 @@ export async function updateSeminaryStudent({
   return data;
 }
 
+export async function deleteSeminaryStudent(studentId: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/students/${encodeURIComponent(studentId)}`,
+  );
+
+  return data;
+}
+
 export async function bulkImportSeminaryStudents(payload: {
   students: SeminaryStudentPayload[];
 }) {
@@ -118,6 +126,18 @@ export async function bulkImportSeminaryStudents(payload: {
     "/seminary/students/bulk-import",
     payload
   );
+
+  return data;
+}
+
+export async function bulkDeleteSeminaryStudents(payload: {
+  studentIds: string[];
+}) {
+  const { data } = await api.delete<{
+    code: string;
+    data: { count: number };
+    message: string;
+  }>("/seminary/students/bulk-delete", { data: payload });
 
   return data;
 }
