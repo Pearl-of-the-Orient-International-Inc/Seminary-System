@@ -1,14 +1,15 @@
-
 "use client";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  Barcode,
   BookOpenCheck,
   FileSpreadsheet,
   Filter,
   GraduationCap,
   Plus,
+  QrCode,
   ShieldCheck,
   Trash2,
   UserRoundCheck,
@@ -49,6 +50,7 @@ import type {
 } from "@/features/seminary/seminary.types";
 
 import { StatCard } from "../../academics/classes/_components/stat-card";
+import { BatchCredentialAssetsDialog } from "./_components/batch-credential-assets-dialog";
 import { BulkImportDialog } from "./_components/bulk-import-dialog";
 import { CellActions } from "./_components/cell-actions";
 import { columns } from "./_components/columns";
@@ -57,6 +59,7 @@ import {
   academicYearOptions,
   programLevelOptions,
   type ProgramLevel,
+  type SchoolAffiliation,
   type StudentRecord,
   type StudentStatus,
 } from "./_components/student-data";
@@ -65,6 +68,8 @@ import { StudentQrCodeDialog } from "./_components/student-qr-code-dialog";
 type StatusFilter = "ALL" | StudentStatus;
 type AcademicYearFilter = "ALL" | (typeof academicYearOptions)[number];
 type ProgramLevelFilter = "ALL" | ProgramLevel;
+type SchoolAffiliationFilter = "ALL" | SchoolAffiliation;
+type BatchAssetMode = "barcode" | "qr";
 
 const programLevelLabelMap: Record<string, ProgramLevel> = {
   CERTIFICATE: "Certificate",
@@ -77,6 +82,11 @@ const enrollmentTypeLabelMap = {
   REGULAR: "Regular",
   TRANSFEREE: "Transferee",
   CROSS_ENROLLEE: "Cross Enrollee",
+} as const;
+
+const schoolAffiliationLabelMap = {
+  IN_HOUSE: "In-House",
+  PARTNER_SCHOOL: "Partner School",
 } as const;
 
 const studentStatusLabelMap = {
@@ -95,13 +105,16 @@ const toStudentRecord = (
   email: application.emailAddress ?? "",
   enrollmentType: enrollmentTypeLabelMap[application.enrollmentType],
   id: application.studentId ?? application.id,
-  name: [application.givenName, application.middleName, application.surname]
-    .filter(Boolean)
-    .join(" ") || "Unnamed Student",
+  name:
+    [application.givenName, application.middleName, application.surname]
+      .filter(Boolean)
+      .join(" ") || "Unnamed Student",
   program: application.programCourse ?? "No program set",
   programLevel: application.programLevel
     ? programLevelLabelMap[application.programLevel]
     : "Certificate",
+  schoolAffiliation:
+    schoolAffiliationLabelMap[application.schoolAffiliation] ?? "In-House",
   status: studentStatusLabelMap[application.studentStatus],
   townCity: application.homeAddress ?? "",
   yearLevel: application.yearLevel ?? "Foundation",
@@ -129,6 +142,8 @@ const toStudentPayload = (
   programLevel: application.programLevel
     ? programLevelLabelMap[application.programLevel]
     : "Certificate",
+  schoolAffiliation:
+    schoolAffiliationLabelMap[application.schoolAffiliation] ?? "In-House",
   studentStatus: status,
   surname: application.surname ?? "",
   yearLevel: application.yearLevel ?? "Foundation",
@@ -140,7 +155,11 @@ const Page = () => {
     useState<AcademicYearFilter>("ALL");
   const [programLevelFilter, setProgramLevelFilter] =
     useState<ProgramLevelFilter>("ALL");
-  const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null);
+  const [schoolAffiliationFilter, setSchoolAffiliationFilter] =
+    useState<SchoolAffiliationFilter>("ALL");
+  const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(
+    null,
+  );
   const [barcodeOpen, setBarcodeOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
@@ -153,6 +172,12 @@ const Page = () => {
   const [studentPendingDelete, setStudentPendingDelete] =
     useState<StudentRecord | null>(null);
   const [qrCodeOpen, setQrCodeOpen] = useState(false);
+  const [batchAssetMode, setBatchAssetMode] = useState<BatchAssetMode | null>(
+    null,
+  );
+  const [batchAssetStudents, setBatchAssetStudents] = useState<StudentRecord[]>(
+    [],
+  );
   const { toast } = useToast();
   const studentsQuery = useSeminaryStudentsQuery({ limit: 100 });
   const updateStudentMutation = useUpdateSeminaryStudentMutation();
@@ -160,8 +185,7 @@ const Page = () => {
   const bulkDeleteStudentsMutation = useBulkDeleteSeminaryStudentsMutation();
 
   const students = useMemo(
-    () =>
-      studentsQuery.data?.data?.map(toStudentRecord) ?? [],
+    () => studentsQuery.data?.data?.map(toStudentRecord) ?? [],
     [studentsQuery.data],
   );
 
@@ -175,10 +199,24 @@ const Page = () => {
       const matchesProgramLevel =
         programLevelFilter === "ALL" ||
         student.programLevel === programLevelFilter;
+      const matchesSchoolAffiliation =
+        schoolAffiliationFilter === "ALL" ||
+        student.schoolAffiliation === schoolAffiliationFilter;
 
-      return matchesStatus && matchesAcademicYear && matchesProgramLevel;
+      return (
+        matchesStatus &&
+        matchesAcademicYear &&
+        matchesProgramLevel &&
+        matchesSchoolAffiliation
+      );
     });
-  }, [academicYearFilter, programLevelFilter, statusFilter, students]);
+  }, [
+    academicYearFilter,
+    programLevelFilter,
+    schoolAffiliationFilter,
+    statusFilter,
+    students,
+  ]);
 
   const totalStudents = students.length;
   const activeStudents = students.filter(
@@ -189,6 +227,9 @@ const Page = () => {
   ).length;
   const higherFormationStudents = students.filter((student) =>
     ["Masteral", "Doctorate"].includes(student.programLevel),
+  ).length;
+  const partnerSchoolStudents = students.filter(
+    (student) => student.schoolAffiliation === "Partner School",
   ).length;
 
   const handleToggleStatus = (record: StudentRecord) => {
@@ -283,6 +324,14 @@ const Page = () => {
     setQrCodeOpen(true);
   };
 
+  const openBatchAssetDialog = (
+    mode: BatchAssetMode,
+    selectedStudents: StudentRecord[],
+  ) => {
+    setBatchAssetMode(mode);
+    setBatchAssetStudents(selectedStudents);
+  };
+
   const renderCellActions = (row: Row<StudentRecord>) => (
     <CellActions
       data={row.original}
@@ -295,7 +344,7 @@ const Page = () => {
 
   return (
     <>
-      <section className="space-y-6 p-10">
+      <section className="min-w-0 max-w-full space-y-6 overflow-x-hidden p-10">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-2">
             <h1 className="font-serif text-4xl text-emerald-950 dark:text-emerald-50">
@@ -326,7 +375,7 @@ const Page = () => {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatCard
             title="Total Students"
             value={totalStudents}
@@ -349,15 +398,15 @@ const Page = () => {
             accentClassName="bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300"
           />
           <StatCard
-            title="Masteral & Doctorate"
-            value={higherFormationStudents}
-            description="Advanced theological"
+            title="Partner School"
+            value={partnerSchoolStudents}
+            description="External school affiliation"
             icon={<BookOpenCheck className="size-6" />}
             accentClassName="bg-violet-500/10 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300"
           />
         </div>
 
-        <Card className="overflow-hidden pt-0! border-emerald-950/10 shadow-sm dark:border-emerald-100/10">
+        <Card className="min-w-0 overflow-hidden pt-0! border-emerald-950/10 shadow-sm dark:border-emerald-100/10">
           <div className="border-b border-emerald-950/10 bg-linear-to-r from-emerald-950 to-emerald-900 px-6 py-5 dark:border-emerald-100/10">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">
@@ -381,8 +430,9 @@ const Page = () => {
                   </div>
                   <div className="mt-1 text-xl font-semibold">
                     {
-                      students.filter((student) => student.programLevel === "Certificate")
-                        .length
+                      students.filter(
+                        (student) => student.programLevel === "Certificate",
+                      ).length
                     }
                   </div>
                 </div>
@@ -391,7 +441,11 @@ const Page = () => {
                     Bachelor
                   </div>
                   <div className="mt-1 text-xl font-semibold">
-                    {students.filter((student) => student.programLevel === "Bachelor").length}
+                    {
+                      students.filter(
+                        (student) => student.programLevel === "Bachelor",
+                      ).length
+                    }
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 backdrop-blur-sm">
@@ -406,7 +460,7 @@ const Page = () => {
             </div>
           </div>
 
-          <CardContent className="p-6">
+          <CardContent className="min-w-0 p-6">
             <GlobalDataTable
               columns={columns}
               data={filteredStudents}
@@ -414,51 +468,52 @@ const Page = () => {
               exportFileName="students"
               filterPlaceholder="Search student, program, contact, or ID..."
               emptyMessage="No student records found."
-              pageSizeOptions={[8, 10, 20]}
+              pageSizeOptions={[8, 10, 20, 50, 100, 500]}
+              selectedActionsPosition="floating"
               renderSelectedActions={(selectedRows, { clearSelection }) => (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="xs"
-                  onClick={() =>
-                    openBulkDeleteDialog(selectedRows, clearSelection)
-                  }
-                >
-                  <Trash2 className="size-3.5" />
-                  Delete selected
-                </Button>
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() =>
+                      openBatchAssetDialog("barcode", selectedRows)
+                    }
+                  >
+                    <Barcode className="size-3.5" />
+                    Download barcodes
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() => openBatchAssetDialog("qr", selectedRows)}
+                  >
+                    <QrCode className="size-3.5" />
+                    Download QR codes
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="xs"
+                    onClick={() =>
+                      openBulkDeleteDialog(selectedRows, clearSelection)
+                    }
+                  >
+                    <Trash2 className="size-3.5" />
+                    Delete selected
+                  </Button>
+                </>
               )}
               toolbarActions={
                 <>
-                  <Select
-                    value={academicYearFilter}
-                    onValueChange={(value) =>
-                      setAcademicYearFilter(value as AcademicYearFilter)
-                    }
-                  >
-                    <SelectTrigger className="min-w-48">
-                      <div className="flex items-center gap-2">
-                        <Filter className="size-4 text-muted-foreground" />
-                        <SelectValue placeholder="All Academic Years" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">All Academic Years</SelectItem>
-                      {academicYearOptions.map((academicYear) => (
-                        <SelectItem key={academicYear} value={academicYear}>
-                          {academicYear}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
                   <Select
                     value={programLevelFilter}
                     onValueChange={(value) =>
                       setProgramLevelFilter(value as ProgramLevelFilter)
                     }
                   >
-                    <SelectTrigger className="min-w-40">
+                    <SelectTrigger className="w-full sm:w-40">
                       <div className="flex items-center gap-2">
                         <Filter className="size-4 text-muted-foreground" />
                         <SelectValue placeholder="All Levels" />
@@ -475,10 +530,35 @@ const Page = () => {
                   </Select>
 
                   <Select
-                    value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                    value={schoolAffiliationFilter}
+                    onValueChange={(value) =>
+                      setSchoolAffiliationFilter(
+                        value as SchoolAffiliationFilter,
+                      )
+                    }
                   >
-                    <SelectTrigger className="min-w-40">
+                    <SelectTrigger className="w-full sm:w-44">
+                      <div className="flex items-center gap-2">
+                        <Filter className="size-4 text-muted-foreground" />
+                        <SelectValue placeholder="All Schools" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">All Schools</SelectItem>
+                      <SelectItem value="In-House">In-House</SelectItem>
+                      <SelectItem value="Partner School">
+                        Partner School
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value) =>
+                      setStatusFilter(value as StatusFilter)
+                    }
+                  >
+                    <SelectTrigger className="w-full sm:w-40">
                       <div className="flex items-center gap-2">
                         <Filter className="size-4 text-muted-foreground" />
                         <SelectValue placeholder="All Status" />
@@ -514,6 +594,17 @@ const Page = () => {
         open={qrCodeOpen}
         onOpenChange={setQrCodeOpen}
         student={selectedStudent}
+      />
+      <BatchCredentialAssetsDialog
+        mode={batchAssetMode ?? "barcode"}
+        open={Boolean(batchAssetMode)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBatchAssetMode(null);
+            setBatchAssetStudents([]);
+          }
+        }}
+        students={batchAssetStudents}
       />
       <AlertDialog
         open={Boolean(studentPendingDelete)}

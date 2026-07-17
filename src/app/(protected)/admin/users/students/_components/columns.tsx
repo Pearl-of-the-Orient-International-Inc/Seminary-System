@@ -34,16 +34,20 @@ export const columns: ColumnDef<StudentRecord>[] = [
       const record = row.original;
 
       return (
-        <div className="flex min-w-55 items-center gap-3">
+        <div className="flex min-w-0 max-w-60 items-center gap-3">
           <Avatar size="lg" className="ring-2 ring-emerald-950/8">
             <AvatarFallback className="bg-emerald-900/10 font-semibold text-emerald-900 dark:bg-emerald-100/10 dark:text-emerald-100">
               {getInitials(record.name)}
             </AvatarFallback>
           </Avatar>
 
-          <div className="space-y-1">
-            <div className="font-medium text-foreground">{record.name}</div>
-            <div className="text-muted-foreground text-xs">{record.id}</div>
+          <div className="min-w-0 space-y-1">
+            <div className="truncate font-medium text-foreground">
+              {record.name}
+            </div>
+            <div className="truncate text-xs text-muted-foreground">
+              {record.id}
+            </div>
           </div>
         </div>
       );
@@ -56,8 +60,8 @@ export const columns: ColumnDef<StudentRecord>[] = [
       const record = row.original;
 
       return (
-        <div className="space-y-1">
-          <div className="min-w-60 font-medium">{record.program}</div>
+        <div className="min-w-0 max-w-72 space-y-1">
+          <div className="truncate font-medium">{record.program}</div>
           <Badge variant="outline" className="rounded-full">
             {record.programLevel}
           </Badge>
@@ -73,9 +77,21 @@ export const columns: ColumnDef<StudentRecord>[] = [
     accessorKey: "enrollmentType",
     header: "Enrollment",
     cell: ({ row }) => (
-      <Badge variant="outline" className="rounded-full">
-        {row.original.enrollmentType}
-      </Badge>
+      <div className="flex min-w-0 max-w-44 flex-wrap gap-1.5">
+        <Badge variant="outline" className="rounded-full">
+          {row.original.enrollmentType}
+        </Badge>
+        <Badge
+          variant={
+            row.original.schoolAffiliation === "Partner School"
+              ? "info"
+              : "secondary"
+          }
+          className="rounded-full"
+        >
+          {row.original.schoolAffiliation}
+        </Badge>
+      </div>
     ),
   },
   {

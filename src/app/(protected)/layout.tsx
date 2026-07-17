@@ -23,7 +23,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         {/* Sidebar */}
         <AppSidebar variant="sidebar" />
         <SidebarInset>
-          <main className="w-full min-h-screen">
+          <main className="min-h-screen w-full min-w-0">
             <HashScrollHandler />
             <div className="absolute top-0 left-0 z-0 w-full h-50 mask-[linear-gradient(to_top,transparent_25%,black_95%)]">
               <FlickeringGrid

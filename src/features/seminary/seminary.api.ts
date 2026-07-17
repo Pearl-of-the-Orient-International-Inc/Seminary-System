@@ -14,11 +14,11 @@ import type {
 } from "./seminary.types";
 
 export async function upsertCurrentSeminaryApplication(
-  payload: SeminaryApplicationPayload
+  payload: SeminaryApplicationPayload,
 ) {
   const { data } = await api.put<SeminaryApplicationResponse>(
     "/seminary/current/application",
-    payload
+    payload,
   );
 
   return data;
@@ -26,7 +26,7 @@ export async function upsertCurrentSeminaryApplication(
 
 export async function getCurrentSeminaryApplication() {
   const { data } = await api.get<SeminaryApplicationResponse>(
-    "/seminary/current/application"
+    "/seminary/current/application",
   );
 
   return data;
@@ -40,7 +40,7 @@ export async function getSeminaryApplications(params?: {
 }) {
   const { data } = await api.get<SeminaryApplicationsResponse>(
     "/seminary/applications",
-    { params }
+    { params },
   );
 
   return data;
@@ -57,7 +57,7 @@ export async function updateSeminaryApplicationStatus({
 }) {
   const { data } = await api.patch<SeminaryApplicationResponse>(
     `/seminary/applications/${id}/status`,
-    { status, reviewRemarks }
+    { status, reviewRemarks },
   );
 
   return data;
@@ -69,11 +69,12 @@ export async function getSeminaryStudents(params?: {
   page?: number;
   programLevel?: string;
   search?: string;
+  schoolAffiliation?: string;
   studentStatus?: string;
 }) {
   const { data } = await api.get<SeminaryStudentsResponse>(
     "/seminary/students",
-    { params }
+    { params },
   );
 
   return data;
@@ -81,7 +82,7 @@ export async function getSeminaryStudents(params?: {
 
 export async function getSeminaryStudent(studentId: string) {
   const { data } = await api.get<SeminaryStudentResponse>(
-    `/seminary/students/${encodeURIComponent(studentId)}`
+    `/seminary/students/${encodeURIComponent(studentId)}`,
   );
 
   return data;
@@ -90,7 +91,7 @@ export async function getSeminaryStudent(studentId: string) {
 export async function createSeminaryStudent(payload: SeminaryStudentPayload) {
   const { data } = await api.post<SeminaryStudentResponse>(
     "/seminary/students",
-    payload
+    payload,
   );
 
   return data;
@@ -105,7 +106,7 @@ export async function updateSeminaryStudent({
 }) {
   const { data } = await api.put<SeminaryStudentResponse>(
     `/seminary/students/${encodeURIComponent(studentId)}`,
-    payload
+    payload,
   );
 
   return data;
@@ -124,7 +125,7 @@ export async function bulkImportSeminaryStudents(payload: {
 }) {
   const { data } = await api.post<SeminaryStudentBulkImportResponse>(
     "/seminary/students/bulk-import",
-    payload
+    payload,
   );
 
   return data;
@@ -155,7 +156,7 @@ export async function generateSeminaryCredentialDocument({
 }) {
   const { data } = await api.post<SeminaryCredentialDocumentResponse>(
     `/seminary/students/${encodeURIComponent(studentId)}/credential-documents`,
-    payload
+    payload,
   );
 
   return data;
@@ -170,7 +171,7 @@ export async function getSeminaryCredentialDocuments({
 }) {
   const { data } = await api.get<SeminaryCredentialDocumentsResponse>(
     `/seminary/students/${encodeURIComponent(studentId)}/credential-documents`,
-    { params: { type } }
+    { params: { type } },
   );
 
   return data;
@@ -178,7 +179,7 @@ export async function getSeminaryCredentialDocuments({
 
 export async function verifySeminaryCredentialDocument(token: string) {
   const { data } = await api.get<SeminaryCredentialDocumentResponse>(
-    `/seminary/credential-documents/verify/${encodeURIComponent(token)}`
+    `/seminary/credential-documents/verify/${encodeURIComponent(token)}`,
   );
 
   return data;

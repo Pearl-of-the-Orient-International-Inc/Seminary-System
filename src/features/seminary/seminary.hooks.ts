@@ -73,6 +73,7 @@ export const useSeminaryStudentsQuery = (params?: {
   page?: number;
   programLevel?: string;
   search?: string;
+  schoolAffiliation?: string;
   studentStatus?: string;
 }) =>
   useQuery({

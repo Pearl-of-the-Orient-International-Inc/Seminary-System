@@ -104,6 +104,7 @@ const formSchema = z.object({
   pastorName: optionalString,
   program: requiredString("Curriculum of interest"),
   programLevel: requiredString("Program level"),
+  schoolAffiliation: requiredString("School affiliation"),
   status: requiredString("Status"),
   surname: requiredString("Surname"),
   townCity: requiredString("Town/City"),
@@ -121,6 +122,11 @@ const enrollmentTypeOptions: SelectOption[] = [
   { label: "Regular", value: "Regular" },
   { label: "Transferee", value: "Transferee" },
   { label: "Cross Enrollee", value: "Cross Enrollee" },
+];
+
+const schoolAffiliationOptions: SelectOption[] = [
+  { label: "In-House", value: "In-House" },
+  { label: "Partner School", value: "Partner School" },
 ];
 
 const statusOptions: SelectOption[] = [
@@ -161,6 +167,11 @@ const enrollmentTypeLabelMap: Record<string, string> = {
   CROSS_ENROLLEE: "Cross Enrollee",
 };
 
+const schoolAffiliationLabelMap: Record<string, string> = {
+  IN_HOUSE: "In-House",
+  PARTNER_SCHOOL: "Partner School",
+};
+
 const studentStatusLabelMap: Record<string, string> = {
   ACTIVE: "Active",
   GRADUATING: "Graduating",
@@ -182,7 +193,9 @@ const createDefaultValues = (
   student?: SeminaryApplicationDetails,
 ): StudentFormValues => {
   return {
-    id: student?.studentId ?? (mode === "create" ? formatStudentNumber() : studentId),
+    id:
+      student?.studentId ??
+      (mode === "create" ? formatStudentNumber() : studentId),
     surname: student?.surname ?? "",
     givenName: student?.givenName ?? "",
     middleName: student?.middleName ?? "",
@@ -208,6 +221,9 @@ const createDefaultValues = (
     enrollmentType: student?.enrollmentType
       ? (enrollmentTypeLabelMap[student.enrollmentType] ?? "Regular")
       : "Regular",
+    schoolAffiliation: student?.schoolAffiliation
+      ? (schoolAffiliationLabelMap[student.schoolAffiliation] ?? "In-House")
+      : "In-House",
     status: student?.studentStatus
       ? (studentStatusLabelMap[student.studentStatus] ?? "Active")
       : "Active",
@@ -249,7 +265,12 @@ const TextFormField = <TFieldValues extends FieldValues>({
         data-invalid={fieldState.invalid}
       >
         <FormFieldLabel requirement={requirement}>{label}</FormFieldLabel>
-        <Input disabled={disabled} placeholder={placeholder} type={type} {...field} />
+        <Input
+          disabled={disabled}
+          placeholder={placeholder}
+          type={type}
+          {...field}
+        />
         <div className="min-h-5">
           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
         </div>
@@ -340,7 +361,9 @@ const SectionTitle = ({
 }) => (
   <div className="space-y-1">
     <p className="font-semibold text-primary">{title}</p>
-    {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
+    {subtitle ? (
+      <p className="text-sm text-muted-foreground">{subtitle}</p>
+    ) : null}
   </div>
 );
 
@@ -378,7 +401,9 @@ export const StudentForm = ({ mode, studentId }: StudentFormProps) => {
   );
 
   const onProgramLevelChange = (value: string) => {
-    form.setValue("programLevel", value as ProgramLevel, { shouldValidate: true });
+    form.setValue("programLevel", value as ProgramLevel, {
+      shouldValidate: true,
+    });
     form.setValue("program", "", { shouldDirty: true, shouldValidate: true });
   };
 
@@ -404,6 +429,7 @@ export const StudentForm = ({ mode, studentId }: StudentFormProps) => {
       pastorName: values.pastorName ?? "",
       programCourse: values.program,
       programLevel: values.programLevel,
+      schoolAffiliation: values.schoolAffiliation,
       studentStatus: values.status,
       surname: values.surname,
       yearLevel: values.yearLevel,
@@ -554,6 +580,15 @@ export const StudentForm = ({ mode, studentId }: StudentFormProps) => {
           <SelectFormField
             className="col-span-12 @4xl:col-span-3"
             control={form.control}
+            label="School Affiliation"
+            name="schoolAffiliation"
+            options={schoolAffiliationOptions}
+            placeholder="Select School"
+            requirement="required"
+          />
+          <SelectFormField
+            className="col-span-12 @4xl:col-span-3"
+            control={form.control}
             label="Year Level"
             name="yearLevel"
             options={yearLevelOptions}
@@ -588,7 +623,9 @@ export const StudentForm = ({ mode, studentId }: StudentFormProps) => {
                 className="col-span-12 flex flex-col items-start gap-2 space-y-0 @4xl:col-span-4"
                 data-invalid={fieldState.invalid}
               >
-                <FormFieldLabel requirement="required">Program Level</FormFieldLabel>
+                <FormFieldLabel requirement="required">
+                  Program Level
+                </FormFieldLabel>
                 <Select
                   name="programLevel"
                   value={selectedProgramLevel}
@@ -606,7 +643,9 @@ export const StudentForm = ({ mode, studentId }: StudentFormProps) => {
                   </SelectContent>
                 </Select>
                 <div className="min-h-5">
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
                 </div>
               </Field>
             )}

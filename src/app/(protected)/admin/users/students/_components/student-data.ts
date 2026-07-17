@@ -1,18 +1,13 @@
 import type { SeminaryApplicationDetails } from "@/features/seminary/seminary.types";
 
 export type StudentStatus =
-  | "Active"
-  | "Graduating"
-  | "Leave of Absence"
-  | "Inactive";
+  "Active" | "Graduating" | "Leave of Absence" | "Inactive";
 
 export type ProgramLevel =
-  | "Certificate"
-  | "Bachelor"
-  | "Masteral"
-  | "Doctorate";
+  "Certificate" | "Bachelor" | "Masteral" | "Doctorate";
 
 export type EnrollmentType = "Regular" | "Transferee" | "Cross Enrollee";
+export type SchoolAffiliation = "In-House" | "Partner School";
 
 export type StudentRecord = {
   academicYear: string;
@@ -23,16 +18,14 @@ export type StudentRecord = {
   name: string;
   program: string;
   programLevel: ProgramLevel;
+  schoolAffiliation: SchoolAffiliation;
   status: StudentStatus;
   townCity: string;
   yearLevel: string;
   application?: SeminaryApplicationDetails;
 };
 
-export const academicYearOptions = [
-  "2025-2026",
-  "2026-2027",
-] as const;
+export const academicYearOptions = ["2025-2026", "2026-2027"] as const;
 
 export const programLevelOptions = [
   "Certificate",
@@ -53,6 +46,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "Foundation",
     academicYear: "2025-2026",
     enrollmentType: "Regular",
+    schoolAffiliation: "In-House",
     status: "Active",
   },
   {
@@ -66,6 +60,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "1st Year",
     academicYear: "2025-2026",
     enrollmentType: "Regular",
+    schoolAffiliation: "In-House",
     status: "Active",
   },
   {
@@ -79,6 +74,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "2nd Year",
     academicYear: "2025-2026",
     enrollmentType: "Transferee",
+    schoolAffiliation: "Partner School",
     status: "Active",
   },
   {
@@ -92,6 +88,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "1st Year",
     academicYear: "2025-2026",
     enrollmentType: "Regular",
+    schoolAffiliation: "In-House",
     status: "Active",
   },
   {
@@ -105,6 +102,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "2nd Year",
     academicYear: "2025-2026",
     enrollmentType: "Regular",
+    schoolAffiliation: "In-House",
     status: "Graduating",
   },
   {
@@ -118,6 +116,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "Residency",
     academicYear: "2025-2026",
     enrollmentType: "Regular",
+    schoolAffiliation: "In-House",
     status: "Active",
   },
   {
@@ -131,6 +130,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "Foundation",
     academicYear: "2026-2027",
     enrollmentType: "Cross Enrollee",
+    schoolAffiliation: "Partner School",
     status: "Active",
   },
   {
@@ -144,6 +144,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "3rd Year",
     academicYear: "2026-2027",
     enrollmentType: "Regular",
+    schoolAffiliation: "In-House",
     status: "Leave of Absence",
   },
   {
@@ -157,6 +158,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "1st Year",
     academicYear: "2026-2027",
     enrollmentType: "Transferee",
+    schoolAffiliation: "Partner School",
     status: "Active",
   },
   {
@@ -170,6 +172,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "Dissertation",
     academicYear: "2026-2027",
     enrollmentType: "Regular",
+    schoolAffiliation: "In-House",
     status: "Inactive",
   },
   {
@@ -183,6 +186,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "4th Year",
     academicYear: "2026-2027",
     enrollmentType: "Regular",
+    schoolAffiliation: "In-House",
     status: "Graduating",
   },
   {
@@ -196,6 +200,7 @@ export const studentRecords: StudentRecord[] = [
     yearLevel: "Foundation",
     academicYear: "2026-2027",
     enrollmentType: "Regular",
+    schoolAffiliation: "In-House",
     status: "Active",
   },
 ];

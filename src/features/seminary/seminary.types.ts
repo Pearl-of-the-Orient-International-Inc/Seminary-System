@@ -81,29 +81,20 @@ export interface SeminaryApplicationResponse {
 }
 
 export type SeminaryApplicationStatus =
-  | "SUBMITTED"
-  | "UNDER_REVIEW"
-  | "APPROVED"
-  | "REJECTED"
-  | "CANCELLED";
+  "SUBMITTED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED" | "CANCELLED";
 
 export type SeminaryPaymentStatus = "PENDING" | "VERIFIED" | "REJECTED";
 
 export type SeminaryStudentStatus =
-  | "ACTIVE"
-  | "GRADUATING"
-  | "LEAVE_OF_ABSENCE"
-  | "INACTIVE";
+  "ACTIVE" | "GRADUATING" | "LEAVE_OF_ABSENCE" | "INACTIVE";
 
 export type SeminaryEnrollmentType =
-  | "REGULAR"
-  | "TRANSFEREE"
-  | "CROSS_ENROLLEE";
+  "REGULAR" | "TRANSFEREE" | "CROSS_ENROLLEE";
+
+export type SeminarySchoolAffiliation = "IN_HOUSE" | "PARTNER_SCHOOL";
 
 export type SeminaryCredentialDocumentType =
-  | "DIPLOMA"
-  | "CERTIFICATE"
-  | "TRANSCRIPT";
+  "DIPLOMA" | "CERTIFICATE" | "TRANSCRIPT";
 
 export type SeminaryCredentialDocumentStatus = "ACTIVE" | "REVOKED" | "VOID";
 
@@ -153,6 +144,7 @@ export interface SeminaryStudentPayload {
   programLevel?: string;
   programCourse?: string;
   enrollmentType?: string;
+  schoolAffiliation?: string;
   yearLevel?: string;
   studentStatus?: string;
 }
@@ -164,6 +156,7 @@ export interface SeminaryApplicationDetails {
   studentId: string | null;
   studentStatus: SeminaryStudentStatus;
   enrollmentType: SeminaryEnrollmentType;
+  schoolAffiliation: SeminarySchoolAffiliation;
   yearLevel: string | null;
   academicYear: string | null;
   surname: string | null;

@@ -59,6 +59,7 @@ type GlobalDataTableProps<TData extends object, TValue> = {
     rows: TData[],
     helpers: { clearSelection: () => void },
   ) => ReactNode;
+  selectedActionsPosition?: "inline" | "floating";
   filterPlaceholder?: string;
   emptyMessage?: string;
   exportFileName?: string;
@@ -77,6 +78,7 @@ export function GlobalDataTable<TData extends object, TValue>({
   manualSorting = false,
   onDeleteSelected,
   renderSelectedActions,
+  selectedActionsPosition = "inline",
   filterPlaceholder = "Filter data...",
   emptyMessage = "No records found.",
   exportFileName = "table-export",
@@ -174,8 +176,8 @@ export function GlobalDataTable<TData extends object, TValue>({
       const search = String(filterValue).toLowerCase().trim();
       if (!search) return true;
 
-      return Object.values(row.original as Record<string, unknown>).some((value) =>
-        String(value).toLowerCase().includes(search),
+      return Object.values(row.original as Record<string, unknown>).some(
+        (value) => String(value).toLowerCase().includes(search),
       );
     },
   });
@@ -195,7 +197,9 @@ export function GlobalDataTable<TData extends object, TValue>({
 
     const headers = Array.from(
       selectedRowsData.reduce((keys, row) => {
-        Object.keys(row as Record<string, unknown>).forEach((key) => keys.add(key));
+        Object.keys(row as Record<string, unknown>).forEach((key) =>
+          keys.add(key),
+        );
         return keys;
       }, new Set<string>()),
     );
@@ -203,7 +207,10 @@ export function GlobalDataTable<TData extends object, TValue>({
     const csvRows = selectedRowsData.map((row) =>
       headers
         .map((key) =>
-          String((row as Record<string, unknown>)[key] ?? "").replaceAll('"', '""'),
+          String((row as Record<string, unknown>)[key] ?? "").replaceAll(
+            '"',
+            '""',
+          ),
         )
         .map((value) => `"${value}"`)
         .join(","),
@@ -221,10 +228,12 @@ export function GlobalDataTable<TData extends object, TValue>({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        {hideSearch ? <div /> : (
-          <div className="relative">
+    <div className="min-w-0 space-y-4">
+      <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        {hideSearch ? (
+          <div />
+        ) : (
+          <div className="relative w-full min-w-0 md:max-w-md lg:max-w-lg">
             <div className="text-muted-foreground pointer-events-none absolute inset-y-0 left-0 flex items-center justify-center pl-3 peer-disabled:opacity-50">
               <SearchIcon className="size-4" />
               <span className="sr-only">Search</span>
@@ -233,7 +242,7 @@ export function GlobalDataTable<TData extends object, TValue>({
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               placeholder={filterPlaceholder}
-              className="lg:w-110 peer px-9 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none"
+              className="peer w-full px-9 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none"
             />
             {isSearching && (
               <div className="text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center justify-center pr-3 peer-disabled:opacity-50">
@@ -244,37 +253,42 @@ export function GlobalDataTable<TData extends object, TValue>({
           </div>
         )}
 
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+        <div className="flex min-w-0 flex-col flex-wrap gap-3 md:flex-row md:items-center md:justify-end">
           {toolbarActions}
-          {selectedRowsData.length > 0 && (
-            <div className="flex items-center gap-2">
-            <Button variant="outline" size="xs" onClick={handleExportSelected}>
-              <IconFileExport className="size-3.5" />
-              Export CSV
-            </Button>
-            {renderSelectedActions?.(selectedRowsData, { clearSelection })}
-            {!renderSelectedActions && onDeleteSelected ? (
-              <Button
-                variant="destructive"
-                size="xs"
-                onClick={handleDeleteSelected}
-              >
-                <Trash2 className="size-3.5" />
-                Delete
-              </Button>
-            ) : null}
-            </div>
-          )}
+          {selectedActionsPosition === "inline" &&
+            selectedRowsData.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={handleExportSelected}
+                >
+                  <IconFileExport className="size-3.5" />
+                  Export CSV
+                </Button>
+                {renderSelectedActions?.(selectedRowsData, { clearSelection })}
+                {!renderSelectedActions && onDeleteSelected ? (
+                  <Button
+                    variant="destructive"
+                    size="xs"
+                    onClick={handleDeleteSelected}
+                  >
+                    <Trash2 className="size-3.5" />
+                    Delete
+                  </Button>
+                ) : null}
+              </div>
+            )}
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="min-w-0 overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="truncate">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -297,7 +311,7 @@ export function GlobalDataTable<TData extends object, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className="align-center whitespace-normal"
+                      className="min-w-0 align-middle whitespace-normal"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -398,6 +412,26 @@ export function GlobalDataTable<TData extends object, TValue>({
           </div>
         </div>
       )}
+
+      {selectedActionsPosition === "floating" && selectedRowsData.length > 0 ? (
+        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-xl border bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
+          <Button variant="outline" size="xs" onClick={handleExportSelected}>
+            <IconFileExport className="size-3.5" />
+            Export CSV
+          </Button>
+          {renderSelectedActions?.(selectedRowsData, { clearSelection })}
+          {!renderSelectedActions && onDeleteSelected ? (
+            <Button
+              variant="destructive"
+              size="xs"
+              onClick={handleDeleteSelected}
+            >
+              <Trash2 className="size-3.5" />
+              Delete
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

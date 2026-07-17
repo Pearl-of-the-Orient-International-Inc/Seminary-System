@@ -59,18 +59,45 @@ const editableColumns: EditableColumn[] = [
   { key: "mobilePhone", label: "Contact #" },
   { key: "birthPlace", label: "Birth Place" },
   { key: "academicYear", label: "Academic Year", placeholder: "2026-2027" },
-  { key: "programLevel", label: "Program Level", placeholder: "Certificate", type: "programLevel" },
+  {
+    key: "programLevel",
+    label: "Program Level",
+    placeholder: "Certificate",
+    type: "programLevel",
+  },
   { key: "programCourse", label: "Program/Course", type: "programCourse" },
   { key: "yearLevel", label: "Year Level" },
-  { key: "enrollmentType", label: "Enrollment", placeholder: "Regular", type: "select" },
-  { key: "studentStatus", label: "Status", placeholder: "Active", type: "select" },
+  {
+    key: "enrollmentType",
+    label: "Enrollment",
+    placeholder: "Regular",
+    type: "select",
+  },
+  {
+    key: "schoolAffiliation",
+    label: "School",
+    placeholder: "In-House",
+    type: "select",
+  },
+  {
+    key: "studentStatus",
+    label: "Status",
+    placeholder: "Active",
+    type: "select",
+  },
   { key: "homeAddress", label: "Address" },
   { key: "civilStatus", label: "Civil Status" },
 ];
 
 const genderOptions = ["Male", "Female", "Prefer not to say"];
 const enrollmentTypeOptions = ["Regular", "Transferee", "Cross Enrollee"];
-const studentStatusOptions = ["Active", "Graduating", "Leave of Absence", "Inactive"];
+const schoolAffiliationOptions = ["In-House", "Partner School"];
+const studentStatusOptions = [
+  "Active",
+  "Graduating",
+  "Leave of Absence",
+  "Inactive",
+];
 
 const normalizeHeader = (header: string) =>
   header
@@ -107,16 +134,22 @@ const inferProgram = (rawProgram: string) => {
     return { programCourse: "", programLevel: "" };
   }
 
-  let bestMatch: { programCourse: string; programLevel: ProgramLevel; score: number } | null =
-    null;
+  let bestMatch: {
+    programCourse: string;
+    programLevel: ProgramLevel;
+    score: number;
+  } | null = null;
 
   for (const group of programGroups) {
     for (const program of group.programs) {
       const programText = normalizeProgramText(program);
       const importedWords = normalized.split(" ").filter(Boolean);
       const optionWords = programText.split(" ").filter(Boolean);
-      const hits = importedWords.filter((word) => optionWords.includes(word)).length;
-      const score = hits / Math.max(importedWords.length, optionWords.length, 1);
+      const hits = importedWords.filter((word) =>
+        optionWords.includes(word),
+      ).length;
+      const score =
+        hits / Math.max(importedWords.length, optionWords.length, 1);
 
       if (score > (bestMatch?.score ?? 0)) {
         bestMatch = {
@@ -167,7 +200,10 @@ const getValue = (row: Record<string, unknown>, aliases: string[]) => {
   return String(found[1]).trim();
 };
 
-const mapExcelRow = (row: Record<string, unknown>, index: number): ImportRow => {
+const mapExcelRow = (
+  row: Record<string, unknown>,
+  index: number,
+): ImportRow => {
   const rawProgram = getValue(row, [
     "program",
     "program course",
@@ -178,20 +214,38 @@ const mapExcelRow = (row: Record<string, unknown>, index: number): ImportRow => 
 
   return {
     rowId: `${Date.now()}-${index}`,
-    studentId: getValue(row, ["student no", "student no.", "student number", "student id"]),
+    studentId: getValue(row, [
+      "student no",
+      "student no.",
+      "student number",
+      "student id",
+    ]),
     surname: getValue(row, ["last name", "surname"]),
     givenName: getValue(row, ["first name", "given name"]),
     middleName: getValue(row, ["m i", "mi", "middle initial", "middle name"]),
     gender: normalizeGender(getValue(row, ["gender", "sex"])),
     emailAddress: getValue(row, ["email", "email address"]),
-    mobilePhone: getValue(row, ["contact", "contact #", "contact number", "mobile phone"]),
+    mobilePhone: getValue(row, [
+      "contact",
+      "contact #",
+      "contact number",
+      "mobile phone",
+    ]),
     homeAddress: getValue(row, ["address", "home address"]),
     birthPlace: getValue(row, ["birth place", "birthplace"]),
     academicYear: getValue(row, ["academic year"]),
     programLevel: inferredProgram.programLevel,
     programCourse: inferredProgram.programCourse,
     yearLevel: getValue(row, ["year level", "year"]),
-    enrollmentType: getValue(row, ["enrollment type", "enrollment"]) || "Regular",
+    enrollmentType:
+      getValue(row, ["enrollment type", "enrollment"]) || "Regular",
+    schoolAffiliation:
+      getValue(row, [
+        "school affiliation",
+        "school type",
+        "school",
+        "affiliation",
+      ]) || "In-House",
     studentStatus: getValue(row, ["status", "student status"]) || "Active",
     civilStatus: getValue(row, ["civil status"]),
   };
@@ -200,6 +254,7 @@ const mapExcelRow = (row: Record<string, unknown>, index: number): ImportRow => 
 const emptyRow = (): ImportRow => ({
   rowId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
   enrollmentType: "Regular",
+  schoolAffiliation: "In-House",
   studentStatus: "Active",
 });
 
@@ -270,9 +325,13 @@ export const BulkImportDialog = ({
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = parseSheetRows(sheet);
-      const parsedRows = data.map(mapExcelRow).filter((row) =>
-        editableColumns.some((column) => String(row[column.key] ?? "").trim()),
-      );
+      const parsedRows = data
+        .map(mapExcelRow)
+        .filter((row) =>
+          editableColumns.some((column) =>
+            String(row[column.key] ?? "").trim(),
+          ),
+        );
 
       const nextRows = parsedRows.length ? parsedRows : [emptyRow()];
       setRows(nextRows);
@@ -335,7 +394,12 @@ export const BulkImportDialog = ({
       onOpenChange(false);
     } catch (err) {
       const apiError = toApiError(err);
-      setError(apiError.message ?? "Bulk import failed.");
+      const firstIssue = apiError.errors?.[0];
+      setError(
+        firstIssue
+          ? `${firstIssue.path}: ${firstIssue.message}`
+          : (apiError.message ?? "Bulk import failed."),
+      );
     }
   };
 
@@ -376,7 +440,9 @@ export const BulkImportDialog = ({
 
     if (column.type === "programCourse") {
       const programLevel = row.programLevel as ProgramLevel | undefined;
-      const courseOptions = programLevel ? getProgramsByLevel(programLevel) : [];
+      const courseOptions = programLevel
+        ? getProgramsByLevel(programLevel)
+        : [];
 
       return (
         <Select
@@ -444,6 +510,26 @@ export const BulkImportDialog = ({
       );
     }
 
+    if (column.key === "schoolAffiliation") {
+      return (
+        <Select
+          value={fieldValue}
+          onValueChange={(value) => updateCell(row.rowId, column.key, value)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select school" />
+          </SelectTrigger>
+          <SelectContent>
+            {schoolAffiliationOptions.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+
     if (column.key === "studentStatus") {
       return (
         <Select
@@ -477,12 +563,13 @@ export const BulkImportDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] max-w-[1100px] flex-col overflow-hidden p-0 sm:max-w-[1100px]">
+      <DialogContent className="flex max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] max-w-275 flex-col overflow-hidden p-0 sm:max-w-[1100px]">
         <DialogHeader>
           <div className="space-y-2 px-6 pt-6">
             <DialogTitle>Bulk Import Students</DialogTitle>
             <DialogDescription>
-            Upload Excel, review parsed rows, then edit missing fields before import.
+              Upload Excel, review parsed rows, then edit missing fields before
+              import.
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -510,7 +597,8 @@ export const BulkImportDialog = ({
             </Button>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <FileSpreadsheet className="size-4" />
-              {populatedRows.length} row{populatedRows.length === 1 ? "" : "s"} ready
+              {populatedRows.length} row{populatedRows.length === 1 ? "" : "s"}{" "}
+              ready
             </div>
           </div>
 
@@ -544,7 +632,9 @@ export const BulkImportDialog = ({
                             {getRowTitle(row, index)}
                           </span>
                           <span className="block truncate text-xs opacity-75">
-                            {row.emailAddress || row.mobilePhone || "No contact"}
+                            {row.emailAddress ||
+                              row.mobilePhone ||
+                              "No contact"}
                           </span>
                         </span>
                         <span className="shrink-0 text-xs opacity-75">
@@ -607,7 +697,11 @@ export const BulkImportDialog = ({
         </div>
 
         <DialogFooter className="border-t px-6 py-4">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button
