@@ -12,17 +12,11 @@ import {
 } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, SaveIcon } from "lucide-react";
+import { SaveIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -32,9 +26,17 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-
-const ADMISSION_NUMBER_PREFIX = "POTSC";
-const ADMISSION_NUMBER_STORAGE_KEY = "potsc-admission-sequence";
+import { useToast } from "@/hooks/use-toast";
+import {
+  toApiError,
+  useCreateSeminaryApplicationMutation,
+  useSeminaryAcademicYearsQuery,
+  useSeminaryCoursesQuery,
+} from "@/features/seminary/seminary.hooks";
+import type {
+  SeminaryCourse,
+  SeminaryProgramLevel,
+} from "@/features/seminary/seminary.types";
 
 const requiredString = (label: string) =>
   z.string().trim().min(1, `${label} is required.`);
@@ -45,51 +47,8 @@ const today = new Date();
 const todayYear = today.getFullYear();
 const todayDateOnly = new Date(todayYear, today.getMonth(), today.getDate());
 
-const curriculumPrograms = {
-  "Certificate Programs": [
-    "Certificate in Christian Evangelism",
-    "Certificate in Christian Ministry",
-    "Certificate in ECE & SPED Management",
-    "Certificate in Ministerial",
-    "Certificate in Advance Ministerial",
-    "Certificate in Associate Theology",
-  ],
-  "Bachelor Programs": [
-    "Bachelor of Theology",
-    "Bachelor of Theology major in Pastoral Ministry",
-    "Bachelor of Theology major in Chaplaincy",
-    "Bachelor of Religious Education",
-    "Bachelor of Christian Ministry in Naturopathic Medicine",
-    "Bachelor of Christian Ministry major in Human Resources & Community Development",
-    "Bachelor in Mission major in Cross-Culture",
-    "Bachelor in Christian Counseling",
-  ],
-  "Master Program with Thesis": [
-    "Master in Theology",
-    "Master of Divinity",
-    "Master of Religious Education",
-    "Master of Christian Ministry in Complementary and Alternative Medicine major in Naturopathy",
-    "Master of Christian Ministry major in Christian Leadership",
-    "Master of Arts & Mission",
-    "Master in Christian Guidance & Counseling",
-  ],
-  "Doctorate Program with Dissertation": [
-    "Doctor of Christian Ministry",
-    "Doctor of Christian Ministry major in Complementary and Alternative Medicine",
-    "Doctor of Theology",
-    "Doctor of Religious Education",
-    "Doctor of Philosophy major in Christian Leadership & Management",
-    "Doctor of Philosophy major in Biblical Studies",
-    "Doctor of Philosophy in Theology",
-    "Doctor of Philosophy in Christian Apologetics",
-    "Doctor of Philosophy in Religion",
-    "Doctor of Philosophy in Pastoral Ministry",
-    "Doctor of Philosophy major in Pastoral Guidance & Counseling",
-  ],
-} as const;
-
 const formSchema = z.object({
-  admissionNumber: requiredString("Admission number"),
+  admissionNumber: z.string().trim().optional(),
   admissionDate: z.date({ message: "Admission date is required." }),
   academicYear: requiredString("Academic year"),
   surname: requiredString("Surname"),
@@ -177,6 +136,8 @@ type DateFormFieldProps<TFieldValues extends FieldValues> = Omit<
 > & {
   buttonId: string;
   disableDate?: (date: Date) => boolean;
+  maxDate?: Date;
+  minDate?: Date;
   placeholder?: string;
 };
 
@@ -189,60 +150,40 @@ type CheckboxGroupFieldProps<TFieldValues extends FieldValues> = {
   requirement?: Requirement;
 };
 
-const academicYearOptions: SelectOption[] = [
-  { label: "2025-2026", value: "2025-2026" },
-  { label: "2026-2027", value: "2026-2027" },
-  { label: "2027-2028", value: "2027-2028" },
+type CurriculumGroup = {
+  label: string;
+  options: string[];
+  program: SeminaryProgramLevel;
+};
+
+const programLevelLabels: Record<SeminaryProgramLevel, string> = {
+  CERTIFICATE: "Certificate Programs",
+  BACHELOR: "Bachelor Programs",
+  MASTER_WITH_THESIS: "Master Program with Thesis",
+  DOCTORATE_WITH_DISSERTATION: "Doctorate Program with Dissertation",
+};
+
+const programLevelOrder: SeminaryProgramLevel[] = [
+  "CERTIFICATE",
+  "BACHELOR",
+  "MASTER_WITH_THESIS",
+  "DOCTORATE_WITH_DISSERTATION",
 ];
 
 const genderOptions: SelectOption[] = [
-  { label: "Male", value: "male" },
-  { label: "Female", value: "female" },
+  { label: "Male", value: "Male" },
+  { label: "Female", value: "Female" },
 ];
 
 const civilStatusOptions: SelectOption[] = [
-  { label: "Single", value: "single" },
-  { label: "Married", value: "married" },
-  { label: "Widowed", value: "widowed" },
-  { label: "Separated", value: "separated" },
+  { label: "Single", value: "Single" },
+  { label: "Married", value: "Married" },
+  { label: "Widowed", value: "Widowed" },
+  { label: "Separated", value: "Separated" },
 ];
 
 const formatAdmissionNumber = (year: number, sequence: number) =>
-  `${ADMISSION_NUMBER_PREFIX}-${year}-${String(sequence).padStart(4, "0")}`;
-
-const getStoredAdmissionSequence = (year: number) => {
-  if (typeof window === "undefined") {
-    return 1;
-  }
-
-  const storedValue = window.localStorage.getItem(ADMISSION_NUMBER_STORAGE_KEY);
-
-  if (!storedValue) {
-    return 1;
-  }
-
-  try {
-    const parsed = JSON.parse(storedValue) as { sequence?: number; year?: number };
-    if (parsed.year === year && typeof parsed.sequence === "number") {
-      return parsed.sequence;
-    }
-  } catch {
-    return 1;
-  }
-
-  return 1;
-};
-
-const setStoredAdmissionSequence = (year: number, sequence: number) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(
-    ADMISSION_NUMBER_STORAGE_KEY,
-    JSON.stringify({ year, sequence }),
-  );
-};
+  `POTSC-${String(year).slice(-2)}-${String(sequence).padStart(4, "0")}`;
 
 const calculateAge = (dateOfBirth: Date, referenceDate: Date) => {
   let age = referenceDate.getFullYear() - dateOfBirth.getFullYear();
@@ -258,7 +199,19 @@ const calculateAge = (dateOfBirth: Date, referenceDate: Date) => {
   return age;
 };
 
-const createDefaultValues = (admissionNumber: string, academicYear = "2025-2026"): AdmissionFormValues => ({
+const toDateInputValue = (date?: Date) =>
+  date instanceof Date && !Number.isNaN(date.getTime())
+    ? format(date, "yyyy-MM-dd")
+    : "";
+
+const fromDateInputValue = (value: string) => {
+  if (!value) return undefined;
+
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const createDefaultValues = (admissionNumber: string, academicYear = ""): AdmissionFormValues => ({
   admissionNumber,
   admissionDate: todayDateOnly,
   academicYear,
@@ -411,9 +364,10 @@ const DateFormField = <TFieldValues extends FieldValues>({
   buttonId,
   className,
   control,
-  disableDate,
   disabled,
   label,
+  maxDate,
+  minDate,
   name,
   placeholder = "dd/mm/yyyy",
   requirement,
@@ -428,35 +382,17 @@ const DateFormField = <TFieldValues extends FieldValues>({
       >
         <FormFieldLabel requirement={requirement}>{label}</FormFieldLabel>
 
-        <Popover>
-          <PopoverTrigger asChild disabled={disabled}>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left font-normal"
-              disabled={disabled}
-              id={buttonId}
-              type="button"
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {field.value ? (
-                format(field.value, "PPP")
-              ) : (
-                <span className="text-muted-foreground">{placeholder}</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          {!disabled && (
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                initialFocus
-                disabled={disableDate}
-                selected={field.value}
-                onSelect={field.onChange}
-              />
-            </PopoverContent>
-          )}
-        </Popover>
+        <Input
+          disabled={disabled}
+          id={buttonId}
+          max={toDateInputValue(maxDate)}
+          min={toDateInputValue(minDate)}
+          placeholder={placeholder}
+          type="date"
+          value={toDateInputValue(field.value)}
+          onBlur={field.onBlur}
+          onChange={(event) => field.onChange(fromDateInputValue(event.target.value))}
+        />
 
         <div className="min-h-5">
           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -533,10 +469,61 @@ const SectionTitle = ({ title, subtitle }: { title: string; subtitle?: string })
   </div>
 );
 
+const toDateString = (date: Date) => format(date, "yyyy-MM-dd");
+
+const groupCoursesByProgram = (courses: SeminaryCourse[]): CurriculumGroup[] =>
+  programLevelOrder
+    .map((program) => ({
+      label: programLevelLabels[program],
+      options: courses
+        .filter((course) => course.program === program)
+        .sort((left, right) => {
+          if (left.sortOrder !== right.sortOrder) {
+            return left.sortOrder - right.sortOrder;
+          }
+
+          return left.courseName.localeCompare(right.courseName);
+        })
+        .map((course) => course.courseName),
+      program,
+    }))
+    .filter((group) => group.options.length > 0);
+
+const getSelectedProgramLevel = (
+  selectedCourses: string[],
+  curriculumGroups: CurriculumGroup[],
+) =>
+  curriculumGroups.find((group) =>
+    group.options.some((option) => selectedCourses.includes(option)),
+  )?.program ?? "";
+
 export const AdmissionForm = () => {
   const initialAdmissionNumber = useMemo(
     () => formatAdmissionNumber(todayYear, 1),
     [],
+  );
+  const { toast } = useToast();
+  const createApplicationMutation = useCreateSeminaryApplicationMutation();
+  const coursesQuery = useSeminaryCoursesQuery({
+    limit: 100,
+    page: 1,
+    status: "ACTIVE",
+  });
+  const academicYearsQuery = useSeminaryAcademicYearsQuery({
+    limit: 100,
+    page: 1,
+  });
+  const curriculumGroups = useMemo(
+    () => groupCoursesByProgram(coursesQuery.data?.data ?? []),
+    [coursesQuery.data?.data],
+  );
+  const academicYearOptions = useMemo<SelectOption[]>(
+    () =>
+      (academicYearsQuery.data?.data ?? []).map((academicYear) => ({
+        label: academicYear.academicYear,
+        value: academicYear.academicYear,
+      })),
+    [academicYearsQuery.data?.data],
   );
 
   const form = useForm<AdmissionFormValues>({
@@ -550,8 +537,7 @@ export const AdmissionForm = () => {
   });
 
   useEffect(() => {
-    const nextSequence = getStoredAdmissionSequence(todayYear);
-    form.setValue("admissionNumber", formatAdmissionNumber(todayYear, nextSequence), {
+    form.setValue("admissionNumber", formatAdmissionNumber(todayYear, 1), {
       shouldDirty: false,
       shouldValidate: false,
     });
@@ -560,6 +546,15 @@ export const AdmissionForm = () => {
       shouldValidate: false,
     });
   }, [form]);
+
+  useEffect(() => {
+    if (!form.getValues("academicYear") && academicYearOptions[0]) {
+      form.setValue("academicYear", academicYearOptions[0].value, {
+        shouldDirty: false,
+        shouldValidate: false,
+      });
+    }
+  }, [academicYearOptions, form]);
 
   useEffect(() => {
     if (!selectedDateOfBirth) {
@@ -577,21 +572,67 @@ export const AdmissionForm = () => {
     });
   }, [form, selectedDateOfBirth]);
 
-  const getNextAdmissionNumber = () => {
-    const nextSequence = getStoredAdmissionSequence(todayYear) + 1;
-    setStoredAdmissionSequence(todayYear, nextSequence);
-    return formatAdmissionNumber(todayYear, nextSequence);
-  };
+  const onSubmit = async (values: AdmissionFormValues) => {
+    try {
+      const result = await createApplicationMutation.mutateAsync({
+        admissionDate: toDateString(values.admissionDate),
+        academicYear: values.academicYear,
+        surname: values.surname,
+        givenName: values.givenName,
+        middleName: values.middleName ?? "",
+        emailAddress: values.emailAddress,
+        mobilePhone: values.mobilePhone,
+        mailingAddress: values.mailingAddress,
+        homeAddress: values.homeAddress,
+        dateOfBirth: toDateString(values.dateOfBirth),
+        birthPlace: values.birthPlace,
+        age: values.age ?? "",
+        gender: values.gender,
+        height: values.height ?? "",
+        weight: values.weight ?? "",
+        civilStatus: values.civilStatus,
+        officePhone: values.officePhone ?? "",
+        churchAttended: values.churchName,
+        churchAddress: values.churchAddress,
+        pastorName: values.pastorName,
+        contactNumber: values.pastorContactNumber,
+        ministryInvolved: values.ministryInvolved ?? "",
+        programLevel: getSelectedProgramLevel(
+          values.curriculumOfInterest,
+          curriculumGroups,
+        ),
+        programCourse: values.curriculumOfInterest.join("; "),
+        highSchool: values.highSchoolName,
+        highSchoolYearGraduated: values.highSchoolYearGraduated,
+        collegeSchool: values.collegeSchoolName ?? "",
+        collegeCourse: values.collegeCourse ?? "",
+        collegeYearGraduated: values.collegeYearGraduated ?? "",
+        vocationalSchool: values.vocationalSchoolName ?? "",
+        vocationalCourse: values.vocationalCourse ?? "",
+        vocationalYearGraduated: values.vocationalYearGraduated ?? "",
+        othersSchool: values.otherSchoolName ?? "",
+        othersCourse: values.otherCourse ?? "",
+        othersYearGraduated: values.otherYearGraduated ?? "",
+      });
 
-  const onSubmit = (values: AdmissionFormValues) => {
-    console.log(values);
-
-    form.reset(createDefaultValues(getNextAdmissionNumber(), values.academicYear));
+      toast({
+        title: "Admission saved",
+        description: `Admission number ${result.data.admissionNumber ?? "created"}.`,
+      });
+      form.reset(createDefaultValues(formatAdmissionNumber(todayYear, 1), values.academicYear));
+    } catch (error) {
+      const apiError = toApiError(error);
+      toast({
+        title: "Failed to save admission",
+        description: apiError.message,
+        variant: "error",
+      });
+    }
   };
 
   const onReset = () => {
     const currentAdmissionNumber = form.getValues("admissionNumber");
-    form.reset(createDefaultValues(currentAdmissionNumber));
+    form.reset(createDefaultValues(currentAdmissionNumber ?? "", form.getValues("academicYear")));
     form.clearErrors();
   };
 
@@ -628,6 +669,7 @@ export const AdmissionForm = () => {
           <SelectFormField
             className="col-span-12 @4xl:col-span-4"
             control={form.control}
+            disabled={academicYearsQuery.isLoading || academicYearOptions.length === 0}
             label="Academic Year"
             name="academicYear"
             options={academicYearOptions}
@@ -681,8 +723,8 @@ export const AdmissionForm = () => {
             buttonId="date-of-birth"
             className="col-span-12 @4xl:col-span-3"
             control={form.control}
-            disableDate={(date) => date > todayDateOnly}
             label="Date of Birth"
+            maxDate={todayDateOnly}
             name="dateOfBirth"
             requirement="required"
           />
@@ -824,17 +866,27 @@ export const AdmissionForm = () => {
           subtitle="Please check one or more programs aligned with the applicant's seminary interest."
         />
         <div className="space-y-6">
-          {Object.entries(curriculumPrograms).map(([groupLabel, options]) => (
-            <CheckboxGroupField
-              key={groupLabel}
-              className="col-span-12"
-              control={form.control}
-              label={groupLabel}
-              name="curriculumOfInterest"
-              options={options}
-              requirement={groupLabel === "Certificate Programs" ? "required" : undefined}
-            />
-          ))}
+          {coursesQuery.isLoading ? (
+            <p className="rounded-lg border border-border/70 px-3 py-3 text-sm text-muted-foreground">
+              Loading active courses...
+            </p>
+          ) : curriculumGroups.length ? (
+            curriculumGroups.map((group, index) => (
+              <CheckboxGroupField
+                key={group.program}
+                className="col-span-12"
+                control={form.control}
+                label={group.label}
+                name="curriculumOfInterest"
+                options={group.options}
+                requirement={index === 0 ? "required" : undefined}
+              />
+            ))
+          ) : (
+            <p className="rounded-lg border border-border/70 px-3 py-3 text-sm text-muted-foreground">
+              No active courses found. Add courses first.
+            </p>
+          )}
         </div>
       </div>
 
@@ -950,12 +1002,21 @@ export const AdmissionForm = () => {
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        <Button type="reset" variant="outline">
+        <Button disabled={createApplicationMutation.isPending} type="reset" variant="outline">
           Reset
         </Button>
-        <Button type="submit">
+        <Button
+          disabled={
+            createApplicationMutation.isPending ||
+            coursesQuery.isLoading ||
+            academicYearsQuery.isLoading ||
+            curriculumGroups.length === 0 ||
+            academicYearOptions.length === 0
+          }
+          type="submit"
+        >
           <SaveIcon />
-          Save Admission
+          {createApplicationMutation.isPending ? "Saving..." : "Save Admission"}
         </Button>
       </div>
     </form>

@@ -54,6 +54,7 @@ export const programGroups: ProgramGroup[] = [
       "Doctor of Christian Ministry",
       "Doctor of Ministry Alternative Medicine",
       "Doctor of Theology",
+      "Doctor of Sacred Theology",
       "Doctor of Religious Education",
       "Doctor of Philosophy (Major in Christian Leadership & Management)",
       "Doctor of Philosophy (Major in Biblical Studies)",

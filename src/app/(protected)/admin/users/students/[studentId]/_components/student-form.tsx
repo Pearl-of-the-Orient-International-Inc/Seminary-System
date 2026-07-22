@@ -152,7 +152,7 @@ const academicYearSelectOptions = academicYearOptions.map((academicYear) => ({
 }));
 
 const formatStudentNumber = () =>
-  `${STUDENT_NUMBER_PREFIX}-${String(new Date().getFullYear()).slice(-2)}-0000`;
+  `${STUDENT_NUMBER_PREFIX}-${String(new Date().getFullYear()).slice(-2)}-0001`;
 
 const programLevelLabelMap: Record<string, ProgramLevel> = {
   CERTIFICATE: "Certificate",

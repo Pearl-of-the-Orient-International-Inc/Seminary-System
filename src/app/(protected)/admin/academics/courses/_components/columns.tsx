@@ -12,7 +12,7 @@ export const courseProgramOptions = [
   "Masteral",
   "Doctorate",
 ] as const;
-export const courseModalityOptions = ["Face to Face", "Online"] as const;
+export const courseModalityOptions = ["Online", "Face to Face", "Both"] as const;
 export const courseStatusOptions = ["Active", "Inactive"] as const;
 
 export type CourseProgram = (typeof courseProgramOptions)[number];
@@ -36,6 +36,7 @@ const modalityVariantMap: Record<
 > = {
   "Face to Face": "secondary",
   Online: "info",
+  Both: "warning",
 };
 
 const statusVariantMap: Record<

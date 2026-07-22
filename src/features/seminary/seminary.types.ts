@@ -74,10 +74,48 @@ export interface SeminaryApplicationPayload {
   };
 }
 
+export interface SeminaryApplicationAdminPayload {
+  admissionDate: string;
+  academicYear: string;
+  surname: string;
+  givenName: string;
+  middleName: string;
+  emailAddress: string;
+  mobilePhone: string;
+  mailingAddress: string;
+  homeAddress: string;
+  dateOfBirth: string;
+  birthPlace: string;
+  age: string;
+  gender: string;
+  height: string;
+  weight: string;
+  civilStatus: string;
+  officePhone: string;
+  churchAttended: string;
+  churchAddress: string;
+  pastorName: string;
+  contactNumber: string;
+  ministryInvolved: string;
+  programLevel: string;
+  programCourse: string;
+  highSchool: string;
+  highSchoolYearGraduated: string;
+  collegeSchool: string;
+  collegeCourse: string;
+  collegeYearGraduated: string;
+  vocationalSchool: string;
+  vocationalCourse: string;
+  vocationalYearGraduated: string;
+  othersSchool: string;
+  othersCourse: string;
+  othersYearGraduated: string;
+}
+
 export interface SeminaryApplicationResponse {
   code: string;
   message: string;
-  data: unknown;
+  data: SeminaryApplicationDetails;
 }
 
 export type SeminaryApplicationStatus =
@@ -97,6 +135,97 @@ export type SeminaryCredentialDocumentType =
   "DIPLOMA" | "CERTIFICATE" | "TRANSCRIPT";
 
 export type SeminaryCredentialDocumentStatus = "ACTIVE" | "REVOKED" | "VOID";
+
+export type SeminaryProgramLevel =
+  "CERTIFICATE" | "BACHELOR" | "MASTER_WITH_THESIS" | "DOCTORATE_WITH_DISSERTATION";
+
+export type SeminaryCourseModality = "FACE_TO_FACE" | "ONLINE" | "BOTH";
+
+export type SeminaryCourseStatus = "ACTIVE" | "INACTIVE";
+
+export type SeminaryAcademicYearSession = "CURRENT" | "PREVIOUS" | "UPCOMING";
+
+export type SeminaryAcademicYearStatus = "ACTIVE" | "UPCOMING" | "COMPLETED";
+
+export interface SeminaryAcademicYear {
+  id: string;
+  academicYear: string;
+  session: SeminaryAcademicYearSession;
+  status: SeminaryAcademicYearStatus;
+  startDate: string;
+  endDate: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SeminaryAcademicYearPayload {
+  academicYear: string;
+  session: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  sortOrder?: number;
+}
+
+export interface SeminaryGradeScaleRow {
+  equivalent: string;
+  percentageRange: string;
+  remarks: string;
+}
+
+export interface SeminaryGradeConfiguration {
+  id: string;
+  passingEquivalent: string;
+  releaseWindow: string;
+  weightProfile: string;
+  completionWindowDays: number;
+  approvalWorkflow: boolean;
+  allowFacultyOverride: boolean;
+  autoPublishApproved: boolean;
+  showConditionalRemark: boolean;
+  gradeScale: SeminaryGradeScaleRow[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SeminaryGradeConfigurationPayload = Partial<
+  Pick<
+    SeminaryGradeConfiguration,
+    | "passingEquivalent"
+    | "releaseWindow"
+    | "weightProfile"
+    | "completionWindowDays"
+    | "approvalWorkflow"
+    | "allowFacultyOverride"
+    | "autoPublishApproved"
+    | "showConditionalRemark"
+    | "gradeScale"
+  >
+>;
+
+export interface SeminaryCourse {
+  id: string;
+  courseName: string;
+  courseCode: string;
+  program: SeminaryProgramLevel;
+  units: number;
+  modality: SeminaryCourseModality;
+  status: SeminaryCourseStatus;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SeminaryCoursePayload {
+  courseName: string;
+  courseCode: string;
+  program: string;
+  units: number;
+  modality: string;
+  status?: string;
+  sortOrder?: number;
+}
 
 export interface SeminaryCredentialDocument {
   id: string;
@@ -153,6 +282,7 @@ export interface SeminaryApplicationDetails {
   id: string;
   status: SeminaryApplicationStatus;
   targetMemberType: string;
+  admissionNumber: string | null;
   studentId: string | null;
   studentStatus: SeminaryStudentStatus;
   enrollmentType: SeminaryEnrollmentType;
@@ -164,6 +294,7 @@ export interface SeminaryApplicationDetails {
   middleName: string | null;
   emailAddress: string | null;
   mobilePhone: string | null;
+  mailingAddress: string | null;
   homeAddress: string | null;
   dateOfBirth: string | null;
   birthPlace: string | null;
@@ -276,6 +407,48 @@ export interface SeminaryStudentBulkImportResponse {
   code: string;
   message: string;
   data: SeminaryApplicationDetails[];
+}
+
+export interface SeminaryCoursesResponse {
+  code: string;
+  message: string;
+  data: SeminaryCourse[];
+  meta?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface SeminaryCourseResponse {
+  code: string;
+  message: string;
+  data: SeminaryCourse;
+}
+
+export interface SeminaryAcademicYearsResponse {
+  code: string;
+  message: string;
+  data: SeminaryAcademicYear[];
+  meta?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface SeminaryAcademicYearResponse {
+  code: string;
+  message: string;
+  data: SeminaryAcademicYear;
+}
+
+export interface SeminaryGradeConfigurationResponse {
+  code: string;
+  message: string;
+  data: SeminaryGradeConfiguration;
 }
 
 export interface SeminaryCredentialDocumentResponse {

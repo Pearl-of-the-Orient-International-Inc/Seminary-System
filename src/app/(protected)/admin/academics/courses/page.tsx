@@ -30,8 +30,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  toApiError,
+  useCreateSeminaryCourseMutation,
+  useDeleteSeminaryCourseMutation,
+  useSeminaryCoursesQuery,
+  useUpdateSeminaryCourseMutation,
+  useUpdateSeminaryCourseStatusMutation,
+} from "@/features/seminary/seminary.hooks";
+import type {
+  SeminaryCourse,
+  SeminaryCourseModality,
+  SeminaryCourseStatus,
+  SeminaryProgramLevel,
+} from "@/features/seminary/seminary.types";
+import { useToast } from "@/hooks/use-toast";
 
-import { CourseDialog, type CourseDialogValues } from "./_components/course-dialog";
 import { CellActions } from "./_components/cell-actions";
 import {
   columns,
@@ -40,351 +54,85 @@ import {
   type CourseRecord,
   type CourseStatus,
 } from "./_components/columns";
+import { CourseDialog, type CourseDialogValues } from "./_components/course-dialog";
 import { StatCard } from "./_components/stat-card";
 
 type StatusFilter = "ALL" | CourseStatus;
 type ModalityFilter = "ALL" | CourseModality;
 
-const initialCourseData: CourseRecord[] = [
-  {
-    id: "1",
-    order: 1,
-    courseName: "Certificate in Christian Evangelism",
-    courseCode: "CERT-CE",
-    program: "Certificate",
-    units: 2,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "2",
-    order: 2,
-    courseName: "Certificate in Christian Ministry",
-    courseCode: "CERT-CM",
-    program: "Certificate",
-    units: 2,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "3",
-    order: 3,
-    courseName: "Certificate in ECE & SPED Management",
-    courseCode: "CERT-ESM",
-    program: "Certificate",
-    units: 2,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "4",
-    order: 4,
-    courseName: "Certificate in Advanced Ministerial",
-    courseCode: "CERT-AM",
-    program: "Certificate",
-    units: 2,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "5",
-    order: 5,
-    courseName: "Certificate in Advanced Theology",
-    courseCode: "CERT-AT",
-    program: "Certificate",
-    units: 2,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "6",
-    order: 6,
-    courseName: "Bachelor of Theology",
-    courseCode: "BTH",
-    program: "Bachelor",
-    units: 3,
-    modality: "Face to Face",
-    status: "Active",
-  },
-  {
-    id: "7",
-    order: 7,
-    courseName: "Bachelor of Theology (Major in Pastoral Ministry)",
-    courseCode: "BTH-PM",
-    program: "Bachelor",
-    units: 3,
-    modality: "Face to Face",
-    status: "Active",
-  },
-  {
-    id: "8",
-    order: 8,
-    courseName: "Bachelor of Theology (Major in Chaplaincy)",
-    courseCode: "BTH-CH",
-    program: "Bachelor",
-    units: 3,
-    modality: "Face to Face",
-    status: "Active",
-  },
-  {
-    id: "9",
-    order: 9,
-    courseName: "Bachelor of Religious Education",
-    courseCode: "BRE",
-    program: "Bachelor",
-    units: 3,
-    modality: "Face to Face",
-    status: "Active",
-  },
-  {
-    id: "10",
-    order: 10,
-    courseName:
-      "Bachelor of Christian Ministry (Major in Human Resources & Community Development)",
-    courseCode: "BCM-HRCD",
-    program: "Bachelor",
-    units: 3,
-    modality: "Face to Face",
-    status: "Active",
-  },
-  {
-    id: "11",
-    order: 11,
-    courseName:
-      "Bachelor of Christian Ministry (Major in Christian Leadership)",
-    courseCode: "BCM-CL",
-    program: "Bachelor",
-    units: 3,
-    modality: "Face to Face",
-    status: "Active",
-  },
-  {
-    id: "12",
-    order: 12,
-    courseName: "Bachelor in Mission (Major in Cross-Culture)",
-    courseCode: "BM-CC",
-    program: "Bachelor",
-    units: 3,
-    modality: "Face to Face",
-    status: "Active",
-  },
-  {
-    id: "13",
-    order: 13,
-    courseName: "Bachelor in Christian Counseling",
-    courseCode: "BCC",
-    program: "Bachelor",
-    units: 3,
-    modality: "Face to Face",
-    status: "Active",
-  },
-  {
-    id: "14",
-    order: 14,
-    courseName: "Bachelor of Christian Ministry in Naturopathic Medicine",
-    courseCode: "BCM-NM",
-    program: "Bachelor",
-    units: 3,
-    modality: "Face to Face",
-    status: "Active",
-  },
-  {
-    id: "15",
-    order: 15,
-    courseName: "Master in Theology",
-    courseCode: "MTH",
-    program: "Masteral",
-    units: 3,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "16",
-    order: 16,
-    courseName: "Master in Divinity",
-    courseCode: "MDIV",
-    program: "Masteral",
-    units: 3,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "17",
-    order: 17,
-    courseName: "Master of Religious Education",
-    courseCode: "MRE",
-    program: "Masteral",
-    units: 3,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "18",
-    order: 18,
-    courseName:
-      "Master of Christian Ministry in Complementary and Alternative Medicine (Major in Naturopathy)",
-    courseCode: "MCM-CAMN",
-    program: "Masteral",
-    units: 3,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "19",
-    order: 19,
-    courseName: "Master of Christian Ministry (Major in Christian Leadership)",
-    courseCode: "MCM-CL",
-    program: "Masteral",
-    units: 3,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "20",
-    order: 20,
-    courseName: "Master of Arts & Mission",
-    courseCode: "MAM",
-    program: "Masteral",
-    units: 3,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "21",
-    order: 21,
-    courseName: "Master in Christian Counseling",
-    courseCode: "MCC",
-    program: "Masteral",
-    units: 3,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "22",
-    order: 22,
-    courseName: "Doctor of Christian Ministry",
-    courseCode: "DCM",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "23",
-    order: 23,
-    courseName: "Doctor of Ministry Alternative Medicine",
-    courseCode: "DM-AM",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "24",
-    order: 24,
-    courseName: "Doctor of Theology",
-    courseCode: "DTH",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "25",
-    order: 25,
-    courseName: "Doctor of Religious Education",
-    courseCode: "DRE",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "26",
-    order: 26,
-    courseName:
-      "Doctor of Philosophy (Major in Christian Leadership & Management)",
-    courseCode: "PHD-CLM",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "27",
-    order: 27,
-    courseName: "Doctor of Philosophy (Major in Biblical Studies)",
-    courseCode: "PHD-BS",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "28",
-    order: 28,
-    courseName: "Doctor of Philosophy in Theology",
-    courseCode: "PHD-TH",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "29",
-    order: 29,
-    courseName: "Doctor of Philosophy in Christian Apologetics",
-    courseCode: "PHD-CA",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "30",
-    order: 30,
-    courseName: "Doctor of Philosophy in Religion",
-    courseCode: "PHD-R",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "31",
-    order: 31,
-    courseName: "Doctor of Philosophy (Major in Pastoral Ministry)",
-    courseCode: "PHD-PM",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-  {
-    id: "32",
-    order: 32,
-    courseName:
-      "Doctor of Philosophy (Major in Pastoral Guidance & Counseling)",
-    courseCode: "PHD-PGC",
-    program: "Doctorate",
-    units: 4,
-    modality: "Online",
-    status: "Active",
-  },
-];
+const programLabelMap: Record<SeminaryProgramLevel, CourseRecord["program"]> = {
+  CERTIFICATE: "Certificate",
+  BACHELOR: "Bachelor",
+  MASTER_WITH_THESIS: "Masteral",
+  DOCTORATE_WITH_DISSERTATION: "Doctorate",
+};
 
-const normalizeRecords = (records: CourseRecord[]) =>
-  records.map((record, index) => ({
-    ...record,
-    order: index + 1,
-  }));
+const programValueMap: Record<CourseRecord["program"], SeminaryProgramLevel> = {
+  Certificate: "CERTIFICATE",
+  Bachelor: "BACHELOR",
+  Masteral: "MASTER_WITH_THESIS",
+  Doctorate: "DOCTORATE_WITH_DISSERTATION",
+};
+
+const modalityLabelMap: Record<SeminaryCourseModality, CourseModality> = {
+  FACE_TO_FACE: "Face to Face",
+  ONLINE: "Online",
+  BOTH: "Both",
+};
+
+const modalityValueMap: Record<CourseModality, SeminaryCourseModality> = {
+  "Face to Face": "FACE_TO_FACE",
+  Online: "ONLINE",
+  Both: "BOTH",
+};
+
+const statusLabelMap: Record<SeminaryCourseStatus, CourseStatus> = {
+  ACTIVE: "Active",
+  INACTIVE: "Inactive",
+};
+
+const statusValueMap: Record<CourseStatus, SeminaryCourseStatus> = {
+  Active: "ACTIVE",
+  Inactive: "INACTIVE",
+};
+
+const toCourseRecord = (course: SeminaryCourse, index: number): CourseRecord => ({
+  id: course.id,
+  order: course.sortOrder || index + 1,
+  courseName: course.courseName,
+  courseCode: course.courseCode,
+  program: programLabelMap[course.program],
+  units: course.units,
+  modality: modalityLabelMap[course.modality],
+  status: statusLabelMap[course.status],
+});
+
+const toCoursePayload = (values: CourseDialogValues) => ({
+  courseName: values.courseName,
+  courseCode: values.courseCode,
+  program: programValueMap[values.program],
+  units: values.units,
+  modality: modalityValueMap[values.modality],
+  status: statusValueMap[values.status],
+});
 
 const Page = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [modalityFilter, setModalityFilter] = useState<ModalityFilter>("ALL");
-  const [courses, setCourses] = useState<CourseRecord[]>(initialCourseData);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<CourseRecord | null>(null);
+  const { toast } = useToast();
+
+  const coursesQuery = useSeminaryCoursesQuery({ limit: 100, page: 1 });
+  const createCourseMutation = useCreateSeminaryCourseMutation();
+  const updateCourseMutation = useUpdateSeminaryCourseMutation();
+  const updateCourseStatusMutation = useUpdateSeminaryCourseStatusMutation();
+  const deleteCourseMutation = useDeleteSeminaryCourseMutation();
+
+  const courses = useMemo(
+    () => (coursesQuery.data?.data ?? []).map(toCourseRecord),
+    [coursesQuery.data?.data],
+  );
 
   const filteredData = useMemo(() => {
     return courses.filter((course) => {
@@ -416,44 +164,79 @@ const Page = () => {
     setDialogOpen(true);
   };
 
-  const handleDelete = (record: CourseRecord) => {
-    setCourses((current) =>
-      normalizeRecords(current.filter((item) => item.id !== record.id)),
-    );
+  const handleDelete = async (record: CourseRecord) => {
+    try {
+      await deleteCourseMutation.mutateAsync(record.id);
+      toast({
+        title: "Course deleted",
+        description: `${record.courseName} was removed from the course catalog.`,
+        variant: "success",
+      });
+    } catch (error) {
+      const apiError = toApiError(error);
+      toast({
+        title: "Delete failed",
+        description: apiError.message ?? "Unable to delete course.",
+        variant: "error",
+      });
+    }
   };
 
-  const handleDialogSubmit = (values: CourseDialogValues) => {
-    const payload: Pick<
-      CourseRecord,
-      "courseName" | "courseCode" | "program" | "units" | "modality" | "status"
-    > = {
-      courseName: values.courseName,
-      courseCode: values.courseCode,
-      program: values.program,
-      units: values.units,
-      modality: values.modality,
-      status: values.status,
-    };
+  const handleToggleStatus = async (record: CourseRecord) => {
+    const nextStatus: SeminaryCourseStatus =
+      record.status === "Active" ? "INACTIVE" : "ACTIVE";
 
-    if (selectedRecord) {
-      setCourses((current) =>
-        current.map((item) =>
-          item.id === selectedRecord.id ? { ...item, ...payload } : item,
-        ),
-      );
-      return;
+    try {
+      await updateCourseStatusMutation.mutateAsync({
+        id: record.id,
+        status: nextStatus,
+      });
+      toast({
+        title: nextStatus === "ACTIVE" ? "Course retrieved" : "Course archived",
+        description: `${record.courseName} is now ${statusLabelMap[nextStatus].toLowerCase()}.`,
+        variant: "success",
+      });
+    } catch (error) {
+      const apiError = toApiError(error);
+      toast({
+        title: "Status update failed",
+        description: apiError.message ?? "Unable to update course status.",
+        variant: "error",
+      });
     }
+  };
 
-    setCourses((current) =>
-      normalizeRecords([
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          order: current.length + 1,
-          ...payload,
-        },
-      ]),
-    );
+  const handleDialogSubmit = async (values: CourseDialogValues) => {
+    try {
+      if (selectedRecord) {
+        await updateCourseMutation.mutateAsync({
+          id: selectedRecord.id,
+          payload: toCoursePayload(values),
+        });
+        toast({
+          title: "Course updated",
+          description: `${values.courseName} was updated successfully.`,
+          variant: "success",
+        });
+      } else {
+        await createCourseMutation.mutateAsync(toCoursePayload(values));
+        toast({
+          title: "Course created",
+          description: `${values.courseName} was added to the course catalog.`,
+          variant: "success",
+        });
+      }
+
+      setDialogOpen(false);
+      setSelectedRecord(null);
+    } catch (error) {
+      const apiError = toApiError(error);
+      toast({
+        title: selectedRecord ? "Update failed" : "Create failed",
+        description: apiError.message ?? "Unable to save course.",
+        variant: "error",
+      });
+    }
   };
 
   const renderCellActions = (row: Row<CourseRecord>) => (
@@ -461,8 +244,12 @@ const Page = () => {
       data={row.original}
       onDelete={handleDelete}
       onEdit={handleEdit}
+      onToggleStatus={handleToggleStatus}
     />
   );
+
+  const isSaving =
+    createCourseMutation.isPending || updateCourseMutation.isPending;
 
   return (
     <>
@@ -532,13 +319,17 @@ const Page = () => {
               cellAction={renderCellActions}
               exportFileName="courses"
               filterPlaceholder="Search courses..."
-              emptyMessage="No courses found."
+              emptyMessage={
+                coursesQuery.isLoading ? "Loading courses..." : "No courses found."
+              }
               pageSizeOptions={[8, 10, 20]}
               toolbarActions={
                 <>
                   <Select
                     value={modalityFilter}
-                    onValueChange={(value) => setModalityFilter(value as ModalityFilter)}
+                    onValueChange={(value) =>
+                      setModalityFilter(value as ModalityFilter)
+                    }
                   >
                     <SelectTrigger className="min-w-44">
                       <div className="flex items-center gap-2">
@@ -558,7 +349,9 @@ const Page = () => {
 
                   <Select
                     value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                    onValueChange={(value) =>
+                      setStatusFilter(value as StatusFilter)
+                    }
                   >
                     <SelectTrigger className="min-w-40">
                       <div className="flex items-center gap-2">
@@ -586,9 +379,13 @@ const Page = () => {
 
       <CourseDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setSelectedRecord(null);
+        }}
         onSubmit={handleDialogSubmit}
         record={selectedRecord}
+        submitting={isSaving}
       />
     </>
   );

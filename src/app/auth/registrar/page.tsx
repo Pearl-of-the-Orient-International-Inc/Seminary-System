@@ -250,7 +250,7 @@ const Page = () => {
                 >
                   <InputOTPGroup>
                     {Array.from({ length: 6 }).map((_, index) => (
-                      <InputOTPSlot key={index} index={index} />
+                      <InputOTPSlot className="size-15" key={index} index={index} />
                     ))}
                   </InputOTPGroup>
                 </InputOTP>

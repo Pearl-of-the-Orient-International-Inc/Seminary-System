@@ -46,8 +46,9 @@ type CourseDialogInputValues = z.input<typeof formSchema>;
 type CourseDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: CourseDialogValues) => void;
+  onSubmit: (values: CourseDialogValues) => Promise<void> | void;
   record?: CourseRecord | null;
+  submitting?: boolean;
 };
 
 export const CourseDialog = ({
@@ -55,6 +56,7 @@ export const CourseDialog = ({
   onOpenChange,
   onSubmit,
   record,
+  submitting = false,
 }: CourseDialogProps) => {
   const form = useForm<CourseDialogInputValues, unknown, CourseDialogValues>({
     resolver: zodResolver(formSchema),
@@ -63,7 +65,7 @@ export const CourseDialog = ({
       courseCode: "",
       program: "Certificate",
       units: 3,
-      modality: "Face to Face",
+      modality: "Online",
       status: "Active",
     },
   });
@@ -76,7 +78,7 @@ export const CourseDialog = ({
       courseCode: record?.courseCode ?? "",
       program: record?.program ?? "Certificate",
       units: record?.units ?? 3,
-      modality: record?.modality ?? "Face to Face",
+      modality: record?.modality ?? "Online",
       status: record?.status ?? "Active",
     });
   }, [form, open, record]);
@@ -98,9 +100,8 @@ export const CourseDialog = ({
         </DialogHeader>
 
         <form
-          onSubmit={form.handleSubmit((values) => {
-            onSubmit(values);
-            onOpenChange(false);
+          onSubmit={form.handleSubmit(async (values) => {
+            await onSubmit(values);
           })}
           className="space-y-4"
         >
@@ -221,11 +222,20 @@ export const CourseDialog = ({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={submitting}
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit">
-              {isEditing ? "Save Changes" : "Create Course"}
+            <Button type="submit" disabled={submitting}>
+              {submitting
+                ? "Saving..."
+                : isEditing
+                  ? "Save Changes"
+                  : "Create Course"}
             </Button>
           </DialogFooter>
         </form>

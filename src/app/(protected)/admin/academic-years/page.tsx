@@ -30,6 +30,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  toApiError,
+  useCreateSeminaryAcademicYearMutation,
+  useDeleteSeminaryAcademicYearMutation,
+  useSeminaryAcademicYearsQuery,
+  useUpdateSeminaryAcademicYearMutation,
+  useUpdateSeminaryAcademicYearSessionMutation,
+  useUpdateSeminaryAcademicYearStatusMutation,
+} from "@/features/seminary/seminary.hooks";
+import type {
+  SeminaryAcademicYear,
+  SeminaryAcademicYearSession,
+  SeminaryAcademicYearStatus,
+} from "@/features/seminary/seminary.types";
+import { useToast } from "@/hooks/use-toast";
 
 import { AcademicYearDialog, type AcademicYearDialogValues } from "./_components/academic-year-dialog";
 import { CellActions } from "./_components/cell-actions";
@@ -43,85 +58,80 @@ import { StatCard } from "./_components/stat-card";
 
 type StatusFilter = "ALL" | AcademicYearStatus;
 
-const initialAcademicYearData: AcademicYearRecord[] = [
-  {
-    id: "1",
-    order: 1,
-    academicYear: "2024-2025",
-    session: "Current",
-    status: "Active",
-    startDate: "01 Apr 2024",
-    endDate: "31 Mar 2025",
-  },
-  {
-    id: "2",
-    order: 2,
-    academicYear: "2023-2024",
-    session: "Previous",
-    status: "Active",
-    startDate: "01 Apr 2023",
-    endDate: "31 Mar 2024",
-  },
-  {
-    id: "3",
-    order: 3,
-    academicYear: "2022-2023",
-    session: "Previous",
-    status: "Completed",
-    startDate: "01 Apr 2022",
-    endDate: "31 Mar 2023",
-  },
-  {
-    id: "4",
-    order: 4,
-    academicYear: "2021-2022",
-    session: "Previous",
-    status: "Completed",
-    startDate: "01 Apr 2021",
-    endDate: "31 Mar 2022",
-  },
-  {
-    id: "5",
-    order: 5,
-    academicYear: "2020-2021",
-    session: "Previous",
-    status: "Completed",
-    startDate: "01 Apr 2020",
-    endDate: "31 Mar 2021",
-  },
-  {
-    id: "6",
-    order: 6,
-    academicYear: "2025-2026",
-    session: "Upcoming",
-    status: "Upcoming",
-    startDate: "01 Apr 2025",
-    endDate: "31 Mar 2026",
-  },
-];
+const sessionLabelMap: Record<SeminaryAcademicYearSession, AcademicYearSession> = {
+  CURRENT: "Current",
+  PREVIOUS: "Previous",
+  UPCOMING: "Upcoming",
+};
 
-const formatDate = (value: Date) => {
-  const date = new Date(value);
-  return date.toLocaleDateString("en-GB", {
+const sessionValueMap: Record<AcademicYearSession, SeminaryAcademicYearSession> = {
+  Current: "CURRENT",
+  Previous: "PREVIOUS",
+  Upcoming: "UPCOMING",
+};
+
+const statusLabelMap: Record<SeminaryAcademicYearStatus, AcademicYearStatus> = {
+  ACTIVE: "Active",
+  UPCOMING: "Upcoming",
+  COMPLETED: "Completed",
+};
+
+const statusValueMap: Record<AcademicYearStatus, SeminaryAcademicYearStatus> = {
+  Active: "ACTIVE",
+  Upcoming: "UPCOMING",
+  Completed: "COMPLETED",
+};
+
+const formatDate = (value: string | Date) =>
+  new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  });
-};
+  }).format(new Date(value));
 
-const normalizeRecords = (records: AcademicYearRecord[]) =>
-  records.map((record, index) => ({
-    ...record,
-    order: index + 1,
-  }));
+const toAcademicYearRecord = (
+  academicYear: SeminaryAcademicYear,
+  index: number,
+): AcademicYearRecord => ({
+  id: academicYear.id,
+  order: academicYear.sortOrder || index + 1,
+  academicYear: academicYear.academicYear,
+  session: sessionLabelMap[academicYear.session],
+  status: statusLabelMap[academicYear.status],
+  startDate: formatDate(academicYear.startDate),
+  endDate: formatDate(academicYear.endDate),
+});
+
+const toAcademicYearPayload = (values: AcademicYearDialogValues) => ({
+  academicYear: values.academicYear,
+  session: sessionValueMap[values.session],
+  status: statusValueMap[values.status],
+  startDate: values.startDate.toISOString(),
+  endDate: values.endDate.toISOString(),
+});
 
 export const Page = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
-  const [academicYears, setAcademicYears] = useState<AcademicYearRecord[]>(
-    initialAcademicYearData,
-  );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<AcademicYearRecord | null>(null);
+  const { toast } = useToast();
+
+  const academicYearsQuery = useSeminaryAcademicYearsQuery({
+    limit: 100,
+    page: 1,
+  });
+  const createAcademicYearMutation = useCreateSeminaryAcademicYearMutation();
+  const updateAcademicYearMutation = useUpdateSeminaryAcademicYearMutation();
+  const updateAcademicYearSessionMutation =
+    useUpdateSeminaryAcademicYearSessionMutation();
+  const updateAcademicYearStatusMutation =
+    useUpdateSeminaryAcademicYearStatusMutation();
+  const deleteAcademicYearMutation = useDeleteSeminaryAcademicYearMutation();
+
+  const academicYears = useMemo(
+    () => (academicYearsQuery.data?.data ?? []).map(toAcademicYearRecord),
+    [academicYearsQuery.data?.data],
+  );
 
   const filteredData = useMemo(() => {
     if (statusFilter === "ALL") {
@@ -152,65 +162,103 @@ export const Page = () => {
     setDialogOpen(true);
   };
 
-  const handleDelete = (record: AcademicYearRecord) => {
-    setAcademicYears((current) =>
-      normalizeRecords(current.filter((item) => item.id !== record.id)),
-    );
+  const handleDelete = async (record: AcademicYearRecord) => {
+    try {
+      await deleteAcademicYearMutation.mutateAsync(record.id);
+      toast({
+        title: "Academic year deleted",
+        description: `${record.academicYear} was removed.`,
+        variant: "success",
+      });
+    } catch (error) {
+      const apiError = toApiError(error);
+      toast({
+        title: "Delete failed",
+        description: apiError.message ?? "Unable to delete academic year.",
+        variant: "error",
+      });
+    }
   };
 
-  const handleChangeSession = (
+  const handleChangeSession = async (
     record: AcademicYearRecord,
     session: AcademicYearSession,
   ) => {
-    setAcademicYears((current) =>
-      current.map((item) =>
-        item.id === record.id ? { ...item, session } : item,
-      ),
-    );
+    try {
+      await updateAcademicYearSessionMutation.mutateAsync({
+        id: record.id,
+        session: sessionValueMap[session],
+      });
+      toast({
+        title: "Session updated",
+        description: `${record.academicYear} was marked as ${session.toLowerCase()}.`,
+        variant: "success",
+      });
+    } catch (error) {
+      const apiError = toApiError(error);
+      toast({
+        title: "Session update failed",
+        description: apiError.message ?? "Unable to update session.",
+        variant: "error",
+      });
+    }
   };
 
-  const handleChangeStatus = (
+  const handleChangeStatus = async (
     record: AcademicYearRecord,
     status: AcademicYearStatus,
   ) => {
-    setAcademicYears((current) =>
-      current.map((item) =>
-        item.id === record.id ? { ...item, status } : item,
-      ),
-    );
+    try {
+      await updateAcademicYearStatusMutation.mutateAsync({
+        id: record.id,
+        status: statusValueMap[status],
+      });
+      toast({
+        title: "Status updated",
+        description: `${record.academicYear} was marked as ${status.toLowerCase()}.`,
+        variant: "success",
+      });
+    } catch (error) {
+      const apiError = toApiError(error);
+      toast({
+        title: "Status update failed",
+        description: apiError.message ?? "Unable to update status.",
+        variant: "error",
+      });
+    }
   };
 
-  const handleDialogSubmit = (values: AcademicYearDialogValues) => {
-    const payload: Pick<
-      AcademicYearRecord,
-      "academicYear" | "session" | "status" | "startDate" | "endDate"
-    > = {
-      academicYear: values.academicYear,
-      session: values.session,
-      status: values.status,
-      startDate: formatDate(values.startDate),
-      endDate: formatDate(values.endDate),
-    };
+  const handleDialogSubmit = async (values: AcademicYearDialogValues) => {
+    try {
+      if (selectedRecord) {
+        await updateAcademicYearMutation.mutateAsync({
+          id: selectedRecord.id,
+          payload: toAcademicYearPayload(values),
+        });
+        toast({
+          title: "Academic year updated",
+          description: `${values.academicYear} was updated successfully.`,
+          variant: "success",
+        });
+      } else {
+        await createAcademicYearMutation.mutateAsync(toAcademicYearPayload(values));
+        toast({
+          title: "Academic year created",
+          description: `${values.academicYear} was added.`,
+          variant: "success",
+        });
+      }
 
-    if (selectedRecord) {
-      setAcademicYears((current) =>
-        current.map((item) =>
-          item.id === selectedRecord.id ? { ...item, ...payload } : item,
-        ),
-      );
-      return;
+      setDialogOpen(false);
+      setSelectedRecord(null);
+    } catch (error) {
+      const apiError = toApiError(error);
+      toast({
+        title: selectedRecord ? "Update failed" : "Create failed",
+        description: apiError.message ?? "Unable to save academic year.",
+        variant: "error",
+      });
     }
-
-    setAcademicYears((current) =>
-      normalizeRecords([
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          order: current.length + 1,
-          ...payload,
-        },
-      ]),
-    );
   };
 
   const renderCellActions = (row: Row<AcademicYearRecord>) => (
@@ -222,6 +270,9 @@ export const Page = () => {
       onEdit={handleEdit}
     />
   );
+
+  const isSaving =
+    createAcademicYearMutation.isPending || updateAcademicYearMutation.isPending;
 
   return (
     <>
@@ -287,13 +338,19 @@ export const Page = () => {
               cellAction={renderCellActions}
               exportFileName="academic-years"
               filterPlaceholder="Search academic years..."
-              emptyMessage="No academic years found."
+              emptyMessage={
+                academicYearsQuery.isLoading
+                  ? "Loading academic years..."
+                  : "No academic years found."
+              }
               pageSizeOptions={[6, 10, 20]}
               toolbarActions={
                 <>
                   <Select
                     value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                    onValueChange={(value) =>
+                      setStatusFilter(value as StatusFilter)
+                    }
                   >
                     <SelectTrigger className="min-w-40">
                       <div className="flex items-center gap-2">
@@ -322,9 +379,13 @@ export const Page = () => {
 
       <AcademicYearDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setSelectedRecord(null);
+        }}
         onSubmit={handleDialogSubmit}
         record={selectedRecord}
+        submitting={isSaving}
       />
     </>
   );

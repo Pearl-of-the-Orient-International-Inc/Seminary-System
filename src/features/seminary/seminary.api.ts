@@ -1,12 +1,24 @@
 import { api } from "@/lib/http-client";
 import type {
   SeminaryApplicationsResponse,
+  SeminaryApplicationAdminPayload,
   SeminaryApplicationPayload,
   SeminaryApplicationResponse,
   SeminaryApplicationStatus,
+  SeminaryAcademicYearPayload,
+  SeminaryAcademicYearResponse,
+  SeminaryAcademicYearsResponse,
+  SeminaryAcademicYearSession,
+  SeminaryAcademicYearStatus,
+  SeminaryCoursePayload,
+  SeminaryCourseResponse,
+  SeminaryCoursesResponse,
+  SeminaryCourseStatus,
   SeminaryCredentialDocumentResponse,
   SeminaryCredentialDocumentsResponse,
   SeminaryCredentialDocumentType,
+  SeminaryGradeConfigurationPayload,
+  SeminaryGradeConfigurationResponse,
   SeminaryStudentPayload,
   SeminaryStudentBulkImportResponse,
   SeminaryStudentResponse,
@@ -41,6 +53,17 @@ export async function getSeminaryApplications(params?: {
   const { data } = await api.get<SeminaryApplicationsResponse>(
     "/seminary/applications",
     { params },
+  );
+
+  return data;
+}
+
+export async function createSeminaryApplication(
+  payload: SeminaryApplicationAdminPayload,
+) {
+  const { data } = await api.post<SeminaryApplicationResponse>(
+    "/seminary/applications",
+    payload,
   );
 
   return data;
@@ -139,6 +162,167 @@ export async function bulkDeleteSeminaryStudents(payload: {
     data: { count: number };
     message: string;
   }>("/seminary/students/bulk-delete", { data: payload });
+
+  return data;
+}
+
+export async function getSeminaryCourses(params?: {
+  limit?: number;
+  modality?: string;
+  page?: number;
+  program?: string;
+  search?: string;
+  status?: string;
+}) {
+  const { data } = await api.get<SeminaryCoursesResponse>(
+    "/seminary/courses",
+    { params },
+  );
+
+  return data;
+}
+
+export async function createSeminaryCourse(payload: SeminaryCoursePayload) {
+  const { data } = await api.post<SeminaryCourseResponse>(
+    "/seminary/courses",
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryCourse({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryCoursePayload;
+}) {
+  const { data } = await api.put<SeminaryCourseResponse>(
+    `/seminary/courses/${encodeURIComponent(id)}`,
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryCourseStatus({
+  id,
+  status,
+}: {
+  id: string;
+  status: SeminaryCourseStatus;
+}) {
+  const { data } = await api.patch<SeminaryCourseResponse>(
+    `/seminary/courses/${encodeURIComponent(id)}/status`,
+    { status },
+  );
+
+  return data;
+}
+
+export async function deleteSeminaryCourse(id: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/courses/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
+export async function getSeminaryAcademicYears(params?: {
+  limit?: number;
+  page?: number;
+  search?: string;
+  session?: string;
+  status?: string;
+}) {
+  const { data } = await api.get<SeminaryAcademicYearsResponse>(
+    "/seminary/academic-years",
+    { params },
+  );
+
+  return data;
+}
+
+export async function createSeminaryAcademicYear(
+  payload: SeminaryAcademicYearPayload,
+) {
+  const { data } = await api.post<SeminaryAcademicYearResponse>(
+    "/seminary/academic-years",
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryAcademicYear({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryAcademicYearPayload;
+}) {
+  const { data } = await api.put<SeminaryAcademicYearResponse>(
+    `/seminary/academic-years/${encodeURIComponent(id)}`,
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryAcademicYearSession({
+  id,
+  session,
+}: {
+  id: string;
+  session: SeminaryAcademicYearSession;
+}) {
+  const { data } = await api.patch<SeminaryAcademicYearResponse>(
+    `/seminary/academic-years/${encodeURIComponent(id)}/session`,
+    { session },
+  );
+
+  return data;
+}
+
+export async function updateSeminaryAcademicYearStatus({
+  id,
+  status,
+}: {
+  id: string;
+  status: SeminaryAcademicYearStatus;
+}) {
+  const { data } = await api.patch<SeminaryAcademicYearResponse>(
+    `/seminary/academic-years/${encodeURIComponent(id)}/status`,
+    { status },
+  );
+
+  return data;
+}
+
+export async function deleteSeminaryAcademicYear(id: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/academic-years/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
+export async function getSeminaryGradeConfiguration() {
+  const { data } = await api.get<SeminaryGradeConfigurationResponse>(
+    "/seminary/grade-configuration",
+  );
+
+  return data;
+}
+
+export async function updateSeminaryGradeConfiguration(
+  payload: SeminaryGradeConfigurationPayload,
+) {
+  const { data } = await api.put<SeminaryGradeConfigurationResponse>(
+    "/seminary/grade-configuration",
+    payload,
+  );
 
   return data;
 }

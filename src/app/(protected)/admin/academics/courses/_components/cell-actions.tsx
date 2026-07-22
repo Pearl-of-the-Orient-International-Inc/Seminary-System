@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Edit, MoreHorizontal, Trash2 } from "lucide-react";
 
 import {
   AlertDialog,
@@ -27,12 +27,14 @@ type CellActionsProps = {
   data: CourseRecord;
   onDelete: (record: CourseRecord) => void;
   onEdit: (record: CourseRecord) => void;
+  onToggleStatus: (record: CourseRecord) => void;
 };
 
 export const CellActions = ({
   data,
   onDelete,
   onEdit,
+  onToggleStatus,
 }: CellActionsProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -49,6 +51,14 @@ export const CellActions = ({
           <DropdownMenuItem onClick={() => onEdit(data)}>
             <Edit className="size-4" />
             Edit course
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onToggleStatus(data)}>
+            {data.status === "Active" ? (
+              <Archive className="size-4" />
+            ) : (
+              <ArchiveRestore className="size-4" />
+            )}
+            {data.status === "Active" ? "Archive course" : "Retrieve course"}
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"

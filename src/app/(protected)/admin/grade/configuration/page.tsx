@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   BadgeCheck,
   BookCheck,
+  CheckCircle2,
   Filter,
-  Save,
   Settings2,
   ShieldCheck,
 } from "lucide-react";
@@ -19,7 +19,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -31,6 +30,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import {
+  toApiError,
+  useSeminaryGradeConfigurationQuery,
+  useUpdateSeminaryGradeConfigurationMutation,
+} from "@/features/seminary/seminary.hooks";
+import type {
+  SeminaryGradeConfiguration,
+  SeminaryGradeConfigurationPayload,
+} from "@/features/seminary/seminary.types";
+import { useToast } from "@/hooks/use-toast";
 
 import { StatCard } from "../../academics/classes/_components/stat-card";
 import {
@@ -40,17 +49,135 @@ import {
 } from "./_components/config-data";
 import { GradingScaleCard } from "./_components/grading-scale-card";
 
+type GradeConfigurationForm = Omit<
+  SeminaryGradeConfigurationPayload,
+  "completionWindowDays"
+> & {
+  completionWindowDays: string;
+};
+
+const defaultConfiguration: GradeConfigurationForm = {
+  passingEquivalent: "2.50",
+  releaseWindow: "After dean confirmation",
+  weightProfile: "Standard Coursework",
+  completionWindowDays: "30",
+  approvalWorkflow: true,
+  allowFacultyOverride: true,
+  autoPublishApproved: false,
+  showConditionalRemark: true,
+  gradeScale: defaultGradeScale,
+};
+
+const toFormState = (
+  configuration: SeminaryGradeConfiguration,
+): GradeConfigurationForm => ({
+  passingEquivalent: configuration.passingEquivalent,
+  releaseWindow: configuration.releaseWindow,
+  weightProfile: configuration.weightProfile,
+  completionWindowDays: String(configuration.completionWindowDays),
+  approvalWorkflow: configuration.approvalWorkflow,
+  allowFacultyOverride: configuration.allowFacultyOverride,
+  autoPublishApproved: configuration.autoPublishApproved,
+  showConditionalRemark: configuration.showConditionalRemark,
+  gradeScale: configuration.gradeScale,
+});
+
+const toPayload = (
+  configuration: GradeConfigurationForm,
+): SeminaryGradeConfigurationPayload => ({
+  passingEquivalent: configuration.passingEquivalent,
+  releaseWindow: configuration.releaseWindow,
+  weightProfile: configuration.weightProfile,
+  completionWindowDays: Math.max(
+    Number.parseInt(configuration.completionWindowDays || "1", 10),
+    1,
+  ),
+  approvalWorkflow: configuration.approvalWorkflow,
+  allowFacultyOverride: configuration.allowFacultyOverride,
+  autoPublishApproved: configuration.autoPublishApproved,
+  showConditionalRemark: configuration.showConditionalRemark,
+  gradeScale: configuration.gradeScale,
+});
+
 const Page = () => {
-  const [passingEquivalent, setPassingEquivalent] = useState("2.50");
-  const [releaseWindow, setReleaseWindow] = useState(
-    "After dean confirmation",
+  const [configuration, setConfiguration] =
+    useState<GradeConfigurationForm>(defaultConfiguration);
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const hydratedRef = useRef(false);
+  const lastSavedPayloadRef = useRef("");
+  const { toast } = useToast();
+  const configurationQuery = useSeminaryGradeConfigurationQuery();
+  const updateConfigurationMutation =
+    useUpdateSeminaryGradeConfigurationMutation();
+
+  useEffect(() => {
+    if (!configurationQuery.data?.data || hydratedRef.current) return;
+
+    const nextConfiguration = toFormState(configurationQuery.data.data);
+    const serializedPayload = JSON.stringify(toPayload(nextConfiguration));
+
+    setConfiguration(nextConfiguration);
+    lastSavedPayloadRef.current = serializedPayload;
+    hydratedRef.current = true;
+  }, [configurationQuery.data?.data]);
+
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+
+    const payload = toPayload(configuration);
+    const serializedPayload = JSON.stringify(payload);
+
+    if (serializedPayload === lastSavedPayloadRef.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      updateConfigurationMutation.mutate(payload, {
+        onSuccess: () => {
+          lastSavedPayloadRef.current = serializedPayload;
+          setLastSavedAt(
+            new Intl.DateTimeFormat("en", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            }).format(new Date()),
+          );
+        },
+        onError: (error) => {
+          const apiError = toApiError(error);
+          toast({
+            title: "Auto-save failed",
+            description: apiError.message ?? "Unable to save configuration.",
+            variant: "error",
+          });
+        },
+      });
+    }, 600);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [configuration, toast, updateConfigurationMutation]);
+
+  const gradeScale = useMemo(
+    () => configuration.gradeScale ?? defaultGradeScale,
+    [configuration.gradeScale],
   );
-  const [weightProfile, setWeightProfile] = useState("Standard Coursework");
-  const [completionWindowDays, setCompletionWindowDays] = useState("30");
-  const [approvalWorkflow, setApprovalWorkflow] = useState(true);
-  const [allowFacultyOverride, setAllowFacultyOverride] = useState(true);
-  const [autoPublishApproved, setAutoPublishApproved] = useState(false);
-  const [showConditionalRemark, setShowConditionalRemark] = useState(true);
+
+  const updateField = <Key extends keyof GradeConfigurationForm>(
+    key: Key,
+    value: GradeConfigurationForm[Key],
+  ) => {
+    setConfiguration((current) => ({ ...current, [key]: value }));
+  };
+
+  const completionWindowDays = configuration.completionWindowDays ?? "30";
+  const passingEquivalent = configuration.passingEquivalent ?? "2.50";
+  const releaseWindow =
+    configuration.releaseWindow ?? "After dean confirmation";
+  const weightProfile = configuration.weightProfile ?? "Standard Coursework";
+  const saveStatus = updateConfigurationMutation.isPending
+    ? "Saving..."
+    : lastSavedAt
+      ? `Auto-saved ${lastSavedAt}`
+      : "Auto-save enabled";
+
   return (
     <section className="space-y-6 p-10">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -74,19 +201,15 @@ const Page = () => {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Grades</BreadcrumbPage>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
                 <BreadcrumbPage>Configuration</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
 
-          <Button size="sm">
-            <Save className="size-4" />
-            Save Configuration
-          </Button>
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-950/10 bg-emerald-950/3 px-3 py-1 text-xs text-muted-foreground dark:border-emerald-100/10">
+            <CheckCircle2 className="size-3.5 text-emerald-700" />
+            {saveStatus}
+          </div>
         </div>
       </div>
 
@@ -122,7 +245,7 @@ const Page = () => {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
-        <GradingScaleCard rows={defaultGradeScale} />
+        <GradingScaleCard rows={gradeScale} />
 
         <Card className="overflow-hidden gap-0! pt-0! border-emerald-950/10 shadow-sm dark:border-emerald-100/10">
           <div className="border-b border-emerald-950/10 bg-linear-to-r from-emerald-950 to-emerald-900 px-6 py-5 dark:border-emerald-100/10">
@@ -144,7 +267,9 @@ const Page = () => {
                 <FieldLabel>Passing Equivalent</FieldLabel>
                 <Select
                   value={passingEquivalent}
-                  onValueChange={setPassingEquivalent}
+                  onValueChange={(value) =>
+                    updateField("passingEquivalent", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select passing equivalent" />
@@ -160,7 +285,10 @@ const Page = () => {
 
               <Field>
                 <FieldLabel>Release Window</FieldLabel>
-                <Select value={releaseWindow} onValueChange={setReleaseWindow}>
+                <Select
+                  value={releaseWindow}
+                  onValueChange={(value) => updateField("releaseWindow", value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select release window" />
                   </SelectTrigger>
@@ -178,7 +306,10 @@ const Page = () => {
             <div className="grid gap-4 md:grid-cols-2">
               <Field>
                 <FieldLabel>Weight Profile</FieldLabel>
-                <Select value={weightProfile} onValueChange={setWeightProfile}>
+                <Select
+                  value={weightProfile}
+                  onValueChange={(value) => updateField("weightProfile", value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select weight profile" />
                   </SelectTrigger>
@@ -198,7 +329,9 @@ const Page = () => {
                   type="number"
                   min={1}
                   value={completionWindowDays}
-                  onChange={(event) => setCompletionWindowDays(event.target.value)}
+                  onChange={(event) =>
+                    updateField("completionWindowDays", event.target.value)
+                  }
                 />
               </Field>
             </div>
@@ -222,8 +355,10 @@ const Page = () => {
                     </FieldDescription>
                   </div>
                   <Switch
-                    checked={approvalWorkflow}
-                    onCheckedChange={setApprovalWorkflow}
+                    checked={configuration.approvalWorkflow ?? true}
+                    onCheckedChange={(value) =>
+                      updateField("approvalWorkflow", value)
+                    }
                   />
                 </Field>
 
@@ -235,8 +370,10 @@ const Page = () => {
                     </FieldDescription>
                   </div>
                   <Switch
-                    checked={allowFacultyOverride}
-                    onCheckedChange={setAllowFacultyOverride}
+                    checked={configuration.allowFacultyOverride ?? true}
+                    onCheckedChange={(value) =>
+                      updateField("allowFacultyOverride", value)
+                    }
                   />
                 </Field>
 
@@ -248,8 +385,10 @@ const Page = () => {
                     </FieldDescription>
                   </div>
                   <Switch
-                    checked={autoPublishApproved}
-                    onCheckedChange={setAutoPublishApproved}
+                    checked={configuration.autoPublishApproved ?? false}
+                    onCheckedChange={(value) =>
+                      updateField("autoPublishApproved", value)
+                    }
                   />
                 </Field>
 
@@ -261,8 +400,10 @@ const Page = () => {
                     </FieldDescription>
                   </div>
                   <Switch
-                    checked={showConditionalRemark}
-                    onCheckedChange={setShowConditionalRemark}
+                    checked={configuration.showConditionalRemark ?? true}
+                    onCheckedChange={(value) =>
+                      updateField("showConditionalRemark", value)
+                    }
                   />
                 </Field>
               </div>

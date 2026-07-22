@@ -56,8 +56,9 @@ type AcademicYearDialogValues = z.infer<typeof formSchema>;
 type AcademicYearDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: AcademicYearDialogValues) => void;
+  onSubmit: (values: AcademicYearDialogValues) => Promise<void> | void;
   record?: AcademicYearRecord | null;
+  submitting?: boolean;
 };
 
 const toDateValue = (value: string) => {
@@ -90,6 +91,7 @@ export const AcademicYearDialog = ({
   onOpenChange,
   onSubmit,
   record,
+  submitting = false,
 }: AcademicYearDialogProps) => {
   const form = useForm<AcademicYearDialogValues>({
     resolver: zodResolver(formSchema),
@@ -133,9 +135,8 @@ export const AcademicYearDialog = ({
         </DialogHeader>
 
         <form
-          onSubmit={form.handleSubmit((values) => {
-            onSubmit(values);
-            onOpenChange(false);
+          onSubmit={form.handleSubmit(async (values) => {
+            await onSubmit(values);
           })}
           className="space-y-4"
         >
@@ -272,11 +273,20 @@ export const AcademicYearDialog = ({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={submitting}
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit">
-              {isEditing ? "Save Changes" : "Create Academic Year"}
+            <Button type="submit" disabled={submitting}>
+              {submitting
+                ? "Saving..."
+                : isEditing
+                  ? "Save Changes"
+                  : "Create Academic Year"}
             </Button>
           </DialogFooter>
         </form>
