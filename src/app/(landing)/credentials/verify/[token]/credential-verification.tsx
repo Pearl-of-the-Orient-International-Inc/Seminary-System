@@ -5,13 +5,25 @@ import { BadgeCheck, CircleAlert, FileCheck2, LoaderCircle } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { verifySeminaryCredentialDocument } from "@/features/seminary/seminary.api";
-import type { SeminaryCredentialDocumentType } from "@/features/seminary/seminary.types";
+import {
+  verifyMemberCredentialDocument,
+  verifySeminaryCredentialDocument,
+} from "@/features/seminary/seminary.api";
+import type {
+  MemberCredentialDocument,
+  MemberCredentialDocumentType,
+  SeminaryCredentialDocument,
+  SeminaryCredentialDocumentType,
+} from "@/features/seminary/seminary.types";
 
 const documentTypeLabelMap: Record<SeminaryCredentialDocumentType, string> = {
   CERTIFICATE: "Certificate",
   DIPLOMA: "Diploma",
   TRANSCRIPT: "Transcript",
+};
+const memberDocumentTypeLabelMap: Record<MemberCredentialDocumentType, string> = {
+  CERTIFICATE: "Certificate",
+  RECOGNITION: "Recognition",
 };
 
 type CredentialVerificationProps = {
@@ -21,16 +33,32 @@ type CredentialVerificationProps = {
 export function CredentialVerification({ token }: CredentialVerificationProps) {
   const verificationQuery = useQuery({
     queryKey: ["seminary", "credential-document", "verify", token],
-    queryFn: () => verifySeminaryCredentialDocument(token),
+    queryFn: async () => {
+      try {
+        const response = await verifySeminaryCredentialDocument(token);
+        return { kind: "seminary" as const, document: response.data };
+      } catch {
+        const response = await verifyMemberCredentialDocument(token);
+        return { kind: "member" as const, document: response.data };
+      }
+    },
     retry: false,
     staleTime: 60_000,
   });
 
-  const document = verificationQuery.data?.data;
-  const studentName = [
-    document?.application?.givenName,
-    document?.application?.middleName,
-    document?.application?.surname,
+  const result = verificationQuery.data;
+  const document = result?.document;
+  const isMemberDocument = result?.kind === "member";
+  const memberDocument = isMemberDocument
+    ? (document as MemberCredentialDocument | undefined)
+    : undefined;
+  const seminaryDocument = !isMemberDocument
+    ? (document as SeminaryCredentialDocument | undefined)
+    : undefined;
+  const personName = [
+    memberDocument?.member?.firstName ?? seminaryDocument?.application?.givenName,
+    seminaryDocument?.application?.middleName,
+    memberDocument?.member?.lastName ?? seminaryDocument?.application?.surname,
   ]
     .filter(Boolean)
     .join(" ");
@@ -46,7 +74,7 @@ export function CredentialVerification({ token }: CredentialVerificationProps) {
           <h1 className="font-serif text-4xl">Credential Verification</h1>
           <p className="text-muted-foreground max-w-2xl">
             This page confirms whether a diploma, certificate, or transcript was
-            issued by the seminary records office.
+            issued by Pearl of the Orient records office.
           </p>
         </div>
 
@@ -68,7 +96,7 @@ export function CredentialVerification({ token }: CredentialVerificationProps) {
                       </span>
                     </div>
                     <p className="text-muted-foreground">
-                      Record matched active seminary credential document.
+                      Record matched active credential document.
                     </p>
                   </div>
                   <Badge variant="success" className="rounded-full">
@@ -83,20 +111,37 @@ export function CredentialVerification({ token }: CredentialVerificationProps) {
                   />
                   <VerificationField
                     label="Document Type"
-                    value={documentTypeLabelMap[document.type]}
+                    value={
+                      isMemberDocument
+                        ? memberDocumentTypeLabelMap[
+                            memberDocument?.type as MemberCredentialDocumentType
+                          ]
+                        : documentTypeLabelMap[
+                            seminaryDocument?.type as SeminaryCredentialDocumentType
+                          ]
+                    }
                   />
                   <VerificationField
-                    label="Student"
-                    value={studentName || "No name on record"}
+                    label={isMemberDocument ? "Member" : "Student"}
+                    value={personName || "No name on record"}
                   />
-                  <VerificationField
-                    label="Student Number"
-                    value={document.application?.studentId ?? "N/A"}
-                  />
-                  <VerificationField
-                    label="Program"
-                    value={document.application?.programCourse ?? "N/A"}
-                  />
+                  {isMemberDocument ? (
+                    <VerificationField
+                      label="Member ID"
+                      value={memberDocument?.member?.uniqueId ?? "N/A"}
+                    />
+                  ) : (
+                    <>
+                      <VerificationField
+                        label="Student Number"
+                        value={seminaryDocument?.application?.studentId ?? "N/A"}
+                      />
+                      <VerificationField
+                        label="Program"
+                        value={seminaryDocument?.application?.programCourse ?? "N/A"}
+                      />
+                    </>
+                  )}
                   <VerificationField
                     label="Issued"
                     value={new Date(document.issuedAt).toLocaleDateString()}
@@ -110,7 +155,7 @@ export function CredentialVerification({ token }: CredentialVerificationProps) {
                 </div>
                 <h2 className="text-xl font-semibold">Credential Not Verified</h2>
                 <p className="text-muted-foreground max-w-md">
-                  No active seminary credential document matched this QR code.
+                  No active credential document matched this QR code.
                   Contact records office if document should be valid.
                 </p>
               </div>

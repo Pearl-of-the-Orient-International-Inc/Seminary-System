@@ -1,4 +1,4 @@
-export type UserRole = "MEMBER" | "OFFICER" | "ADMIN";
+export type UserRole = "MEMBER" | "OFFICER" | "ADMIN" | "INSTRUCTOR";
 
 export type UserPosition =
   | "CLERK"

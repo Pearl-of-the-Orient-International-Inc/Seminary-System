@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 
 import {
@@ -12,73 +12,95 @@ import {
   validateApplyStep,
 } from "../_components/application-shell";
 import { Button } from "@/components/ui/button";
+import { useSeminaryCoursesQuery } from "@/features/seminary/seminary.hooks";
+import type {
+  SeminaryCourse,
+  SeminaryProgramLevel,
+} from "@/features/seminary/seminary.types";
 
-const curriculumGroups = [
-  {
-    title: "Certificate",
-    programs: [
-      "Certificate in Christian Evangelism",
-      "Certificate in Christian Ministry",
-      "Certificate in ECE & SPED Management",
-      "Certificate in Advanced Ministerial",
-      "Certificate in Advanced Theology",
-    ],
-  },
-  {
-    title: "Bachelor",
-    programs: [
-      "Bachelor of Theology",
-      "Bachelor of Theology (Major in Pastoral Ministry)",
-      "Bachelor of Theology (Major in Chaplaincy)",
-      "Bachelor of Religious Education",
-      "Bachelor of Christian Ministry in Naturopathic Medicine",
-      "Bachelor of Christian Ministry (Major in Human Resources & Community Development)",
-      "Bachelor of Christian Ministry (Major in Christian Leadership)",
-      "Bachelor in Mission (Major in Cross-Culture)",
-      "Bachelor in Christian Counseling",
-    ],
-  },
-  {
-    title: "Master with Thesis",
-    programs: [
-      "Master in Theology",
-      "Master in Divinity",
-      "Master of Religious Education",
-      "Master of Christian Ministry in Complementary and Alternative Medicine (Major in Naturopathy)",
-      "Master of Christian Ministry (Major in Christian Leadership)",
-      "Master of Arts & Mission",
-      "Master in Christian Counseling",
-    ],
-  },
-  {
-    title: "Doctorate with Dissertation",
-    programs: [
-      "Doctor of Christian Ministry",
-      "Doctor of Ministry Alternative Medicine",
-      "Doctor of Theology",
-      "Doctor of Religious Education",
-      "Doctor of Philosophy (Major in Christian Leadership & Management)",
-      "Doctor of Philosophy (Major in Biblical Studies)",
-      "Doctor of Philosophy in Theology",
-      "Doctor of Philosophy in Christian Apologetics",
-      "Doctor of Philosophy in Religion",
-      "Doctor of Philosophy (Major in Pastoral Ministry)",
-      "Doctor of Philosophy (Major in Pastoral Guidance & Counseling)",
-    ],
-  },
-];
+const programLevelLabelMap: Record<SeminaryProgramLevel, string> = {
+  CERTIFICATE: "Certificate",
+  BACHELOR: "Bachelor",
+  MASTER_WITH_THESIS: "Master with Thesis",
+  DOCTORATE_WITH_DISSERTATION: "Doctorate with Dissertation",
+};
+
+type CurriculumGroup = {
+  title: string;
+  programs: string[];
+};
+
+function buildCurriculumGroupsFromCourses(courses: SeminaryCourse[]) {
+  const activeCourses = courses
+    .filter((course) => course.status === "ACTIVE")
+    .sort((left, right) => left.sortOrder - right.sortOrder);
+
+  if (!activeCourses.length) {
+    return [];
+  }
+
+  const groupsByTitle = new Map<string, CurriculumGroup>();
+
+  activeCourses.forEach((course) => {
+    const title = programLevelLabelMap[course.program];
+    const currentGroup = groupsByTitle.get(title);
+
+    if (currentGroup) {
+      if (!currentGroup.programs.includes(course.courseName)) {
+        currentGroup.programs.push(course.courseName);
+      }
+      return;
+    }
+
+    groupsByTitle.set(title, {
+      title,
+      programs: [course.courseName],
+    });
+  });
+
+  return Array.from(groupsByTitle.values());
+}
 
 const Page = () => {
   const router = useRouter();
+  const coursesQuery = useSeminaryCoursesQuery({
+    limit: 200,
+    page: 1,
+    status: "ACTIVE",
+  });
   const [validationMessage, setValidationMessage] = useState("");
+  const dynamicCurriculumGroups = useMemo(
+    () => buildCurriculumGroupsFromCourses(coursesQuery.data?.data ?? []),
+    [coursesQuery.data?.data],
+  );
   const [selectedProgramLevel, setSelectedProgramLevel] = useApplyFormField(
     "program_level",
-    curriculumGroups[0].title
+    ""
   );
   const [selectedCourse, setSelectedCourse] = useApplyFormField("program_course");
   const selectedProgramGroup =
-    curriculumGroups.find((group) => group.title === selectedProgramLevel) ??
-    curriculumGroups[0];
+    dynamicCurriculumGroups.find((group) => group.title === selectedProgramLevel) ??
+    dynamicCurriculumGroups[0];
+
+  useEffect(() => {
+    if (!dynamicCurriculumGroups.length) {
+      return;
+    }
+
+    const selectedGroupExists = dynamicCurriculumGroups.some(
+      (group) => group.title === selectedProgramLevel,
+    );
+
+    if (!selectedGroupExists) {
+      setSelectedProgramLevel(dynamicCurriculumGroups[0].title);
+      setSelectedCourse("");
+    }
+  }, [
+    dynamicCurriculumGroups,
+    selectedProgramLevel,
+    setSelectedCourse,
+    setSelectedProgramLevel,
+  ]);
   const handleContinue = () => {
     const result = validateApplyStep(1);
 
@@ -156,16 +178,21 @@ const Page = () => {
                 setSelectedProgramLevel(nextProgramLevel);
                 setSelectedCourse("");
               }}
-              options={curriculumGroups.map((group) => group.title)}
+              options={dynamicCurriculumGroups.map((group) => group.title)}
             />
           </div>
 
           <section className="mt-6 rounded-md border border-[#0b3327]/10 bg-[#fbfcfb] p-4">
             <h3 className="font-serif text-lg font-bold">
-              {selectedProgramGroup.title} Courses
+              {selectedProgramGroup?.title ?? "Available"} Courses
             </h3>
+            <p className="mt-1 text-sm text-[#31463f]">
+              {coursesQuery.isLoading
+                ? "Loading active courses from the course catalog."
+                : "Showing active courses from the course catalog."}
+            </p>
             <div className="mt-4 grid gap-2 md:grid-cols-2">
-              {selectedProgramGroup.programs.map((program) => (
+              {selectedProgramGroup?.programs.map((program) => (
                 <label
                   key={program}
                   className="flex cursor-pointer items-start gap-3 rounded-md bg-white px-3 py-2 text-sm leading-5 text-[#31463f] ring-1 ring-[#0b3327]/8 transition hover:ring-[#0b4b39]/35"
@@ -182,6 +209,11 @@ const Page = () => {
                 </label>
               ))}
             </div>
+            {!coursesQuery.isLoading && !selectedProgramGroup?.programs.length ? (
+              <div className="mt-4 rounded-md border border-dashed border-[#0b3327]/20 bg-white px-4 py-6 text-sm text-[#31463f]">
+                No active courses available in the course catalog.
+              </div>
+            ) : null}
           </section>
         </section>
 

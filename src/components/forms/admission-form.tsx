@@ -183,7 +183,7 @@ const civilStatusOptions: SelectOption[] = [
 ];
 
 const formatAdmissionNumber = (year: number, sequence: number) =>
-  `POTSC-${String(year).slice(-2)}-${String(sequence).padStart(4, "0")}`;
+  `POTSCI-${String(year).slice(-2)}-${String(sequence).padStart(4, "0")}`;
 
 const calculateAge = (dateOfBirth: Date, referenceDate: Date) => {
   let age = referenceDate.getFullYear() - dateOfBirth.getFullYear();

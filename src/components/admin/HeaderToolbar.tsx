@@ -43,7 +43,8 @@ export const HeaderToolbar = () => {
   const { data: currentUser, isLoading } = useCurrentUserQuery();
   const logoutMutation = useLogoutMutation();
   const isDark = resolvedTheme === "dark";
-  const displayName = currentUser?.name ?? (isLoading ? "Loading..." : "Admin User");
+  const displayName =
+    currentUser?.name ?? (isLoading ? "Loading..." : "Admin User");
   const displayRole =
     currentUser?.position === "REGISTRAR"
       ? "Registrar"
@@ -64,8 +65,11 @@ export const HeaderToolbar = () => {
   );
 
   const handleLogout = async () => {
+    const redirectPath =
+      currentUser?.role === "INSTRUCTOR" ? "/auth/instructor" : "/auth/registrar";
+
     await logoutMutation.mutateAsync();
-    router.replace("/admin/auth/access");
+    router.replace(redirectPath);
   };
 
   return (
@@ -92,7 +96,11 @@ export const HeaderToolbar = () => {
             aria-label="Toggle appearance"
             onClick={() => setTheme(isDark ? "light" : "dark")}
           >
-            {isDark ? <IconSun className="size-4" /> : <IconMoon className="size-4" />}
+            {isDark ? (
+              <IconSun className="size-4" />
+            ) : (
+              <IconMoon className="size-4" />
+            )}
           </Button>
 
           <Button
@@ -128,7 +136,9 @@ export const HeaderToolbar = () => {
                   <p className="truncate text-xs font-semibold text-[#304736] dark:text-[#edf4ed]">
                     {displayName}
                   </p>
-                  <p className="text-[10px] text-[#7c857b] dark:text-[#9fb09f]">{displayRole}</p>
+                  <p className="text-[10px] text-[#7c857b] dark:text-[#9fb09f]">
+                    {displayRole}
+                  </p>
                 </div>
               </button>
             </DropdownMenuTrigger>
@@ -145,7 +155,9 @@ export const HeaderToolbar = () => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/admin/school-settings")}>
+              <DropdownMenuItem
+                onClick={() => router.push("/admin/school-settings")}
+              >
                 <IconUserCircle className="size-4" />
                 Profile
               </DropdownMenuItem>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,16 +25,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   toApiError,
+  useSeminaryFeeConfigurationQuery,
   useUploadSeminaryPaymentReceiptMutation,
 } from "@/features/seminary/seminary.hooks";
+import type { SeminaryFeeBreakdownItem } from "@/features/seminary/seminary.types";
 import { useToast } from "@/hooks/use-toast";
 
-const fees = [
-  ["Registration Fee", "₱500.00","One-time, non-refundable registration fee"],
-  ["Tuition Fee", "₱3,000.00", "Tuition fee for the current academic term"],
-  ["School Uniform", "₱900.00", "Includes 2 sets of prescribed school uniform"],
-  ["Technology Subscription", "₱100.00", "Access to online classes and virtual learning"],
-];
+type FeeProgramLevel = "Certificate" | "Bachelor" | "Masteral" | "Doctorate";
+
+const fallbackFeeBreakdowns: Record<FeeProgramLevel, SeminaryFeeBreakdownItem[]> = {
+  Certificate: [
+    { label: "Registration Fee", amount: 500 },
+    { label: "Tuition Fee", amount: 3000 },
+    { label: "School Uniform", amount: 900 },
+    { label: "Google Meet Subscription", amount: 100 },
+  ],
+  Bachelor: [
+    { label: "Registration Fee", amount: 1000 },
+    { label: "Tuition Fee", amount: 30000 },
+    { label: "Miscellaneous Fee", amount: 2000 },
+    { label: "Graduation Fee", amount: 8000 },
+  ],
+  Masteral: [
+    { label: "Registration Fee", amount: 1000 },
+    { label: "Tuition Fee", amount: 30000 },
+    { label: "Miscellaneous Fee", amount: 2000 },
+    { label: "Graduation Fee", amount: 8000 },
+  ],
+  Doctorate: [
+    { label: "Registration Fee", amount: 1000 },
+    { label: "Tuition Fee", amount: 40000 },
+    { label: "Miscellaneous Fee", amount: 2000 },
+    { label: "Graduation Fee", amount: 8000 },
+  ],
+};
+
+const currency = new Intl.NumberFormat("en-PH", {
+  currency: "PHP",
+  style: "currency",
+});
 
 const paymentMethods = [
   {
@@ -68,9 +97,21 @@ const formatFileSize = (size: number) => {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+function getFeeProgramLevel(value: string): FeeProgramLevel {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized.includes("doctorate")) return "Doctorate";
+  if (normalized.includes("master")) return "Masteral";
+  if (normalized.includes("bachelor")) return "Bachelor";
+
+  return "Certificate";
+}
+
 const Page = () => {
   const router = useRouter();
+  const feeConfigurationQuery = useSeminaryFeeConfigurationQuery();
   const [validationMessage, setValidationMessage] = useState("");
+  const [programLevel] = useApplyFormField("program_level", "Certificate");
   const [paymentMethod, setPaymentMethod] = useApplyFormField(
     "payment_method",
     paymentMethods[0].title
@@ -81,8 +122,9 @@ const Page = () => {
   );
   const [paymentAmount, setPaymentAmount] = useApplyFormField(
     "payment_amount",
-    "4500.00"
+    ""
   );
+  const [, setTotalAmountDue] = useApplyFormField("total_amount_due");
   const [receiptFileName, setReceiptFileName] = useApplyFormField(
     "proof_of_receipt_file_name"
   );
@@ -98,10 +140,25 @@ const Page = () => {
   >("idle");
   const receiptUploadMutation = useUploadSeminaryPaymentReceiptMutation();
   const { toast } = useToast();
+  const selectedFeeProgramLevel = getFeeProgramLevel(programLevel);
+  const feeBreakdowns =
+    feeConfigurationQuery.data?.data.feeBreakdowns ?? fallbackFeeBreakdowns;
+  const fees = useMemo(
+    () => feeBreakdowns[selectedFeeProgramLevel] ?? [],
+    [feeBreakdowns, selectedFeeProgramLevel]
+  );
+  const totalAmountDue = useMemo(
+    () => fees.reduce((sum, item) => sum + item.amount, 0),
+    [fees]
+  );
+  const totalAmountDueValue = totalAmountDue.toFixed(2);
+  const totalAmountDueLabel = currency.format(totalAmountDue);
 
   const handleContinue = () => {
-    if (paymentType === "Full Payment" && paymentAmount !== "4500.00") {
-      setPaymentAmount("4500.00");
+    setTotalAmountDue(totalAmountDueValue);
+
+    if (paymentType === "Full Payment" && paymentAmount !== totalAmountDueValue) {
+      setPaymentAmount(totalAmountDueValue);
     }
 
     const result = validateApplyStep(3);
@@ -161,6 +218,9 @@ const Page = () => {
 
         <section className="mt-6 rounded-md border border-[#0b3327]/10 p-5">
           <h3 className="font-serif text-xl font-bold">Breakdown of Fees</h3>
+          <p className="mt-1 text-sm text-[#31463f]">
+            Showing configured fees for {selectedFeeProgramLevel}.
+          </p>
           <div className="mt-4 overflow-x-auto rounded-md border border-[#0b3327]/10">
             <table className="w-full min-w-162.5 text-left text-sm">
               <thead className="bg-[#f8faf9]">
@@ -171,14 +231,18 @@ const Page = () => {
                 </tr>
               </thead>
               <tbody>
-                {fees.map(([description, amount, detail], index) => (
+                {fees.map((fee, index) => (
                   <tr
-                    key={description}
+                    key={`${fee.label}-${index}`}
                     className="border-t border-[#0b3327]/10"
                   >
-                    <td className="px-4 py-4">{index + 1}. {description}</td>
-                    <td className="px-4 py-4 font-semibold">{amount}</td>
-                    <td className="px-4 py-4 text-[#31463f]">{detail}</td>
+                    <td className="px-4 py-4">{index + 1}. {fee.label}</td>
+                    <td className="px-4 py-4 font-semibold">
+                      {currency.format(fee.amount)}
+                    </td>
+                    <td className="px-4 py-4 text-[#31463f]">
+                      Configured fee item for {selectedFeeProgramLevel}.
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -188,7 +252,7 @@ const Page = () => {
                     Total Amount Due
                   </td>
                   <td className="px-4 py-4 text-2xl font-extrabold text-[#003f2b]">
-                    ₱ 4,500.00
+                    {totalAmountDueLabel}
                   </td>
                 </tr>
               </tfoot>
@@ -213,7 +277,7 @@ const Page = () => {
               onValueChange={(nextPaymentType) => {
                 setPaymentType(nextPaymentType);
                 setPaymentAmount(
-                  nextPaymentType === "Full Payment" ? "4500.00" : ""
+                  nextPaymentType === "Full Payment" ? totalAmountDueValue : ""
                 );
               }}
             />
@@ -239,9 +303,13 @@ const Page = () => {
                   Amount Paid (₱)
                 </p>
                 <div className="mt-2 flex h-10 items-center rounded-md border border-[#0b3327]/10 bg-[#f8faf9] px-3 text-sm font-bold text-[#0b4b39]">
-                  ₱4,500.00
+                  {totalAmountDueLabel}
                 </div>
-                <input type="hidden" name="payment_amount" value="4500.00" />
+                <input
+                  type="hidden"
+                  name="payment_amount"
+                  value={totalAmountDueValue}
+                />
               </div>
             )}
           </div>

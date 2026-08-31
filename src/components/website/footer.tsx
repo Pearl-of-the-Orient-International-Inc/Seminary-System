@@ -45,10 +45,10 @@ const footerColumns = [
   {
     title: "Faculty Portal",
     links: [
-      { label: "Instructor Login", href: "/instructor/dashboard" },
-      { label: "Class Management", href: "/instructor/dashboard" },
-      { label: "Grade Encoding", href: "/instructor/dashboard" },
-      { label: "Reports", href: "/instructor/dashboard" },
+      { label: "Instructor Login", href: "/auth/instructor" },
+      { label: "Class Management", href: "/admin/dashboard" },
+      { label: "Grade Encoding", href: "/admin/grade/records" },
+      { label: "Reports", href: "/admin/dashboard" },
       { label: "Resources", href: "/resources" },
     ],
   },

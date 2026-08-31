@@ -49,7 +49,7 @@ const Page = () => {
 
   useEffect(() => {
     if (!currentUser || !canAccessAdminPortal(currentUser)) return;
-    router.replace("/admin/dashboard");
+    router.replace("/portal/dashboard");
   }, [currentUser, router]);
 
   const handleAuthorizedLogin = (user: AuthUser) => {
@@ -69,7 +69,7 @@ const Page = () => {
       description: "Welcome to the Seminary Admin Portal.",
       variant: "success",
     });
-    router.push("/admin/dashboard");
+    router.push("/portal/dashboard");
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -156,12 +156,12 @@ const Page = () => {
             />
           </div>
           <h2 className="mt-5 font-serif text-3xl font-bold">
-            {requiresMfa ? "Two-factor Authentication" : "Admin Portal Login"}
+            {requiresMfa ? "Two-factor Authentication" : "Registrar Login"}
           </h2>
           <p className="mt-2 text-sm leading-6 text-[#31463f]">
             {requiresMfa
               ? "Enter the 6-digit code from your authenticator app."
-              : "Sign in with your staff email address and password."}
+              : "Sign in with your registrar or administrator email address."}
           </p>
         </div>
 
@@ -172,14 +172,16 @@ const Page = () => {
           {!requiresMfa ? (
             <>
               <label className="block">
-                <span className="text-sm font-bold">Email Address</span>
+                <span className="text-sm font-bold">
+                  Email Address
+                </span>
                 <div className="relative mt-2">
                   <Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#0b4b39]" />
                   <Input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="Enter email address"
+                    placeholder="Enter registrar email address"
                     className="h-10 border-[#0b3327]/10 bg-white pl-11 text-sm shadow-none focus-visible:border-[#0b4b39] focus-visible:ring-3 focus-visible:ring-[#0b4b39]/12"
                     required
                   />
@@ -236,7 +238,7 @@ const Page = () => {
                 disabled={loginMutation.isPending}
                 className="h-10 w-full rounded-md bg-[#003f2b] text-sm font-semibold text-white shadow-none hover:bg-[#07533a]"
               >
-                {loginMutation.isPending ? "Signing in..." : "Log In"}
+                {loginMutation.isPending ? "Signing in..." : "Log In as Registrar"}
               </Button>
             </>
           ) : (

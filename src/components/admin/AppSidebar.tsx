@@ -39,6 +39,8 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
+import { useCurrentUserQuery } from "@/features/auth/auth.hooks";
+import { isInstructorAllowedPath } from "./instructor-access";
 
 type SidebarItem = {
   title: string;
@@ -58,18 +60,18 @@ const sections: SidebarSection[] = [
     items: [
       {
         title: "Dashboard",
-        url: "/admin/dashboard",
+        url: "/portal/dashboard",
         icon: IconLayoutDashboard,
       },
       {
         title: "Announcement",
-        url: "/admin/announcement",
+        url: "/portal/announcement",
         icon: IconBroadcast,
         badge: "2",
       },
       {
         title: "Admissions",
-        url: "/admin/admissions",
+        url: "/portal/admissions",
         icon: IconTopologyStar,
       },
     ],
@@ -79,42 +81,42 @@ const sections: SidebarSection[] = [
     items: [
       {
         title: "Students",
-        url: "/admin/users/students",
+        url: "/portal/users/students",
         icon: IconUsers,
       },
       {
         title: "Enrollment",
-        url: "/admin/enrollment",
+        url: "/portal/enrollment",
         icon: IconBuilding,
       },
       {
         title: "Program & Courses",
-        url: "/admin/academics/courses",
+        url: "/portal/academics/courses",
         icon: IconBooks,
       },
       {
         title: "Grades & Transcripts",
-        url: "/admin/grade/records",
+        url: "/portal/grade/records",
         icon: IconClipboardText,
       },
       {
         title: "Assignments",
-        url: "/admin/lms/assignments",
+        url: "/portal/lms/assignments",
         icon: IconNotebook,
       },
       {
         title: "Examinations",
-        url: "/admin/lms/examinations",
+        url: "/portal/lms/examinations",
         icon: IconBriefcase,
       },
       {
         title: "Learning Materials",
-        url: "/admin/lms/study-materials",
+        url: "/portal/lms/study-materials",
         icon: IconSchool,
       },
       {
         title: "Attendance Management",
-        url: "/admin/academics/attendance",
+        url: "/portal/academics/attendance",
         icon: IconChartBar,
       },
     ],
@@ -124,22 +126,22 @@ const sections: SidebarSection[] = [
     items: [
       {
         title: "Faculty",
-        url: "/admin/users/instructors",
+        url: "/portal/users/instructors",
         icon: IconUserStar,
       },
       {
         title: "Document Requests",
-        url: "/admin/document-requests",
+        url: "/portal/document-requests",
         icon: IconFileText,
       },
       {
         title: "Fees & Payments",
-        url: "/admin/fee-collection",
+        url: "/portal/fee-collection",
         icon: IconCreditCard,
       },
       {
         title: "Thesis & Dissertation",
-        url: "/admin/academics/thesis-dissertation",
+        url: "/portal/academics/thesis-dissertation",
         icon: IconReceipt2,
       },
     ],
@@ -149,32 +151,32 @@ const sections: SidebarSection[] = [
     items: [
       {
         title: "Settings",
-        url: "/admin/school-settings",
+        url: "/portal/school-settings",
         icon: IconSettings,
       },
       {
         title: "Academic Years",
-        url: "/admin/academic-years",
+        url: "/portal/academic-years",
         icon: IconCalendar,
       },
       {
         title: "Time Table",
-        url: "/admin/academics/timetable",
+        url: "/portal/academics/timetable",
         icon: IconTableColumn,
       },
       {
         title: "Grade Configuration",
-        url: "/admin/grade/configuration",
+        url: "/portal/grade/configuration",
         icon: IconReportAnalytics,
       },
       {
         title: "Reports",
-        url: "/admin/reports",
+        url: "/portal/reports",
         icon: IconFileDescription,
       },
       {
         title: "Help & Support",
-        url: "/admin/help-support",
+        url: "/portal/help-support",
         icon: IconHelpCircle,
       },
     ],
@@ -190,7 +192,19 @@ export const AppSidebar = ({
 }: React.ComponentProps<typeof Sidebar>) => {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const { data: currentUser } = useCurrentUserQuery();
   const isCollapsed = state === "collapsed";
+  const visibleSections =
+    currentUser?.role === "INSTRUCTOR"
+      ? sections
+          .map((section) => ({
+            ...section,
+            items: section.items.filter((item) =>
+              isInstructorAllowedPath(item.url),
+            ),
+          }))
+          .filter((section) => section.items.length > 0)
+      : sections;
 
   return (
     <Sidebar collapsible="icon" className="border-r-0" {...props}>
@@ -219,7 +233,7 @@ export const AppSidebar = ({
               <p className="text-xs font-medium uppercase">
                 Pearl of the Orient Theological Seminary and Colleges
               </p>
-              <Badge>Admin Portal</Badge>
+              <Badge>{currentUser?.role === "ADMIN" ? "Admin" : "Instructor"} Portal</Badge>
             </div>
           </div>
         )}
@@ -227,7 +241,7 @@ export const AppSidebar = ({
 
       <SidebarContent className="bg-[#173f20] px-3 py-4 scrollbar-hide text-white">
         <div className="space-y-5">
-          {sections.map((section) => (
+          {visibleSections.map((section) => (
             <section
               key={section.label}
               className={cn(

@@ -4,6 +4,7 @@ import * as seminaryApi from "./seminary.api";
 import {
   uploadSeminaryPaymentReceipt,
   uploadSeminaryRequirement,
+  uploadSeminaryStudyMaterial,
 } from "./seminary-upload.api";
 
 export const useCurrentSeminaryApplicationQuery = () =>
@@ -48,6 +49,9 @@ export const useCreateSeminaryApplicationMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: ["seminary", "applications"],
       });
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "students"],
+      });
     },
     meta: { feature: "seminary.application.create" },
   });
@@ -67,6 +71,13 @@ export const useUploadSeminaryPaymentReceiptMutation = () =>
     meta: { feature: "seminary.paymentReceipt.upload" },
   });
 
+export const useUploadSeminaryStudyMaterialMutation = () =>
+  useMutation({
+    mutationFn: uploadSeminaryStudyMaterial,
+    throwOnError: false,
+    meta: { feature: "seminary.studyMaterial.upload" },
+  });
+
 export const useUpdateSeminaryApplicationStatusMutation = () => {
   const queryClient = useQueryClient();
 
@@ -79,6 +90,37 @@ export const useUpdateSeminaryApplicationStatusMutation = () => {
       });
     },
     meta: { feature: "seminary.application.status.update" },
+  });
+};
+
+export const useSeminaryEnrollmentsQuery = (params?: {
+  limit?: number;
+  page?: number;
+}) =>
+  useQuery({
+    queryKey: ["seminary", "enrollments", params],
+    queryFn: () => seminaryApi.getSeminaryEnrollments(params),
+    staleTime: 30_000,
+  });
+
+export const useUpdateSeminaryEnrollmentStatusMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryEnrollmentStatus,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "enrollments"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "applications"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "students"],
+      });
+    },
+    meta: { feature: "seminary.enrollment.status.update" },
   });
 };
 
@@ -263,6 +305,320 @@ export const useDeleteSeminaryCourseMutation = () => {
   });
 };
 
+export const useSeminaryStudyMaterialsQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryStudyMaterials>[0],
+) =>
+  useQuery({
+    queryKey: ["seminary", "study-materials", params],
+    queryFn: () => seminaryApi.getSeminaryStudyMaterials(params),
+    staleTime: 30_000,
+  });
+
+export const useCreateSeminaryStudyMaterialMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryStudyMaterial,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "study-materials"],
+      });
+    },
+    meta: { feature: "seminary.studyMaterial.create" },
+  });
+};
+
+export const useUpdateSeminaryStudyMaterialMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryStudyMaterial,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "study-materials"],
+      });
+    },
+    meta: { feature: "seminary.studyMaterial.update" },
+  });
+};
+
+export const useDeleteSeminaryStudyMaterialMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.deleteSeminaryStudyMaterial,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "study-materials"],
+      });
+    },
+    meta: { feature: "seminary.studyMaterial.delete" },
+  });
+};
+
+export const useSeminaryAssignmentsQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryAssignments>[0],
+) =>
+  useQuery({
+    queryKey: ["seminary", "assignments", params],
+    queryFn: () => seminaryApi.getSeminaryAssignments(params),
+    staleTime: 30_000,
+  });
+
+export const useCreateSeminaryAssignmentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryAssignment,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "assignments"],
+      });
+    },
+    meta: { feature: "seminary.assignment.create" },
+  });
+};
+
+export const useUpdateSeminaryAssignmentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryAssignment,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "assignments"],
+      });
+    },
+    meta: { feature: "seminary.assignment.update" },
+  });
+};
+
+export const useUpdateSeminaryAssignmentStatusMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryAssignmentStatus,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "assignments"],
+      });
+    },
+    meta: { feature: "seminary.assignment.status.update" },
+  });
+};
+
+export const useDeleteSeminaryAssignmentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.deleteSeminaryAssignment,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "assignments"],
+      });
+    },
+    meta: { feature: "seminary.assignment.delete" },
+  });
+};
+
+export const useSeminaryExaminationsQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryExaminations>[0],
+) =>
+  useQuery({
+    queryKey: ["seminary", "examinations", params],
+    queryFn: () => seminaryApi.getSeminaryExaminations(params),
+    staleTime: 30_000,
+  });
+
+export const useSeminaryExaminationQuery = (
+  id: string,
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    queryKey: ["seminary", "examinations", id],
+    queryFn: () => seminaryApi.getSeminaryExamination(id),
+    enabled: options?.enabled ?? true,
+    staleTime: 30_000,
+  });
+
+export const useCreateSeminaryExaminationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryExamination,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "examinations"],
+      });
+    },
+    meta: { feature: "seminary.examination.create" },
+  });
+};
+
+export const useUpdateSeminaryExaminationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryExamination,
+    throwOnError: false,
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "examinations"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "examinations", variables.id],
+      });
+    },
+    meta: { feature: "seminary.examination.update" },
+  });
+};
+
+export const useUpdateSeminaryExaminationStatusMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryExaminationStatus,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "examinations"],
+      });
+    },
+    meta: { feature: "seminary.examination.status.update" },
+  });
+};
+
+export const useDeleteSeminaryExaminationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.deleteSeminaryExamination,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "examinations"],
+      });
+    },
+    meta: { feature: "seminary.examination.delete" },
+  });
+};
+
+export const useSeminaryInstructorsQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryInstructors>[0],
+) =>
+  useQuery({
+    queryKey: ["seminary", "instructors", params],
+    queryFn: () => seminaryApi.getSeminaryInstructors(params),
+    staleTime: 30_000,
+  });
+
+export const useSeminaryInstructorQuery = (
+  id: string,
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    queryKey: ["seminary", "instructors", id],
+    queryFn: () => seminaryApi.getSeminaryInstructor(id),
+    enabled: options?.enabled ?? true,
+    staleTime: 30_000,
+  });
+
+export const useCreateSeminaryInstructorMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryInstructor,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "instructors"],
+      });
+    },
+    meta: { feature: "seminary.instructor.create" },
+  });
+};
+
+export const useUpdateSeminaryInstructorMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryInstructor,
+    throwOnError: false,
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "instructors"],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "instructors", variables.id],
+      });
+    },
+    meta: { feature: "seminary.instructor.update" },
+  });
+};
+
+export const useUpdateSeminaryInstructorStatusMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryInstructorStatus,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "instructors"],
+      });
+    },
+    meta: { feature: "seminary.instructor.status.update" },
+  });
+};
+
+export const useInviteSeminaryInstructorMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.inviteSeminaryInstructor,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "instructors"],
+      });
+    },
+    meta: { feature: "seminary.instructor.invite" },
+  });
+};
+
+export const useAcceptSeminaryInstructorInviteMutation = () =>
+  useMutation({
+    mutationFn: seminaryApi.acceptSeminaryInstructorInvite,
+    throwOnError: false,
+    meta: { feature: "seminary.instructor.invite.accept" },
+  });
+
+export const useDeleteSeminaryInstructorMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.deleteSeminaryInstructor,
+    throwOnError: false,
+    onSuccess: async (_data, id) => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "instructors"],
+      });
+      await queryClient.removeQueries({
+        queryKey: ["seminary", "instructors", id],
+      });
+    },
+    meta: { feature: "seminary.instructor.delete" },
+  });
+};
+
 export const useSeminaryAcademicYearsQuery = (params?: {
   limit?: number;
   page?: number;
@@ -370,6 +726,147 @@ export const useUpdateSeminaryGradeConfigurationMutation = () => {
       });
     },
     meta: { feature: "seminary.gradeConfiguration.update" },
+  });
+};
+
+export const useSeminaryFeeConfigurationQuery = () =>
+  useQuery({
+    queryKey: ["seminary", "fee-configuration"],
+    queryFn: seminaryApi.getSeminaryFeeConfiguration,
+    staleTime: 30_000,
+  });
+
+export const useUpdateSeminaryFeeConfigurationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryFeeConfiguration,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "fee-configuration"],
+      });
+    },
+    meta: { feature: "seminary.feeConfiguration.update" },
+  });
+};
+
+export const useSeminaryGradeRecordsQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryGradeRecords>[0],
+) =>
+  useQuery({
+    queryKey: ["seminary", "grade-records", params],
+    queryFn: () => seminaryApi.getSeminaryGradeRecords(params),
+    staleTime: 30_000,
+  });
+
+export const useSeminaryGradeRecordQuery = (
+  id: string,
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    queryKey: ["seminary", "grade-records", id],
+    queryFn: () => seminaryApi.getSeminaryGradeRecord(id),
+    enabled: options?.enabled ?? Boolean(id),
+    staleTime: 30_000,
+  });
+
+export const useCreateSeminaryGradeRecordMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryGradeRecord,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "grade-records"],
+      });
+    },
+    meta: { feature: "seminary.gradeRecord.create" },
+  });
+};
+
+export const useUpdateSeminaryGradeRecordMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryGradeRecord,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "grade-records"],
+      });
+    },
+    meta: { feature: "seminary.gradeRecord.update" },
+  });
+};
+
+export const useUpdateSeminaryGradeRecordStatusMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryGradeRecordStatus,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "grade-records"],
+      });
+    },
+    meta: { feature: "seminary.gradeRecord.status.update" },
+  });
+};
+
+export const useDeleteSeminaryGradeRecordMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.deleteSeminaryGradeRecord,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "grade-records"],
+      });
+    },
+    meta: { feature: "seminary.gradeRecord.delete" },
+  });
+};
+
+export const useSeminaryFeeCollectionsQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryFeeCollections>[0],
+) =>
+  useQuery({
+    queryKey: ["seminary", "fee-collections", params],
+    queryFn: () => seminaryApi.getSeminaryFeeCollections(params),
+    staleTime: 30_000,
+  });
+
+export const useUpdateSeminaryFeeCollectionStatusMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryFeeCollectionStatus,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "fee-collections"],
+      });
+    },
+    meta: { feature: "seminary.feeCollection.status.update" },
+  });
+};
+
+export const useUpdateSeminaryFeeCollectionPaymentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryFeeCollectionPayment,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "fee-collections"],
+      });
+    },
+    meta: { feature: "seminary.feeCollection.payment.update" },
   });
 };
 

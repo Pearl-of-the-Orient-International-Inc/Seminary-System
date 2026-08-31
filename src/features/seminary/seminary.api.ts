@@ -5,6 +5,14 @@ import type {
   SeminaryApplicationPayload,
   SeminaryApplicationResponse,
   SeminaryApplicationStatus,
+  SeminaryAssignmentPayload,
+  SeminaryAssignmentResponse,
+  SeminaryAssignmentsResponse,
+  SeminaryAssignmentStatus,
+  SeminaryExaminationPayload,
+  SeminaryExaminationResponse,
+  SeminaryExaminationsResponse,
+  SeminaryExaminationStatus,
   SeminaryAcademicYearPayload,
   SeminaryAcademicYearResponse,
   SeminaryAcademicYearsResponse,
@@ -17,8 +25,29 @@ import type {
   SeminaryCredentialDocumentResponse,
   SeminaryCredentialDocumentsResponse,
   SeminaryCredentialDocumentType,
+  MemberCredentialDocumentResponse,
   SeminaryGradeConfigurationPayload,
   SeminaryGradeConfigurationResponse,
+  SeminaryFeeConfigurationPayload,
+  SeminaryFeeConfigurationResponse,
+  SeminaryFeeCollectionResponse,
+  SeminaryFeeCollectionsResponse,
+  SeminaryFeeCollectionPaymentPayload,
+  SeminaryFeeCollectionStatus,
+  SeminaryGradeRecordPayload,
+  SeminaryGradeRecordResponse,
+  SeminaryGradeRecordsResponse,
+  SeminaryGradeRecordStatus,
+  SeminaryInstructorPayload,
+  SeminaryInstructorResponse,
+  SeminaryInstructorInviteResponse,
+  SeminaryInstructorsResponse,
+  SeminaryInstructorStatus,
+  SeminaryStudyMaterialPayload,
+  SeminaryStudyMaterialResponse,
+  SeminaryStudyMaterialsResponse,
+  SeminaryStudyMaterialStatus,
+  SeminaryStudyMaterialType,
   SeminaryStudentPayload,
   SeminaryStudentBulkImportResponse,
   SeminaryStudentResponse,
@@ -76,10 +105,41 @@ export async function updateSeminaryApplicationStatus({
 }: {
   id: string;
   reviewRemarks?: string;
-  status: Exclude<SeminaryApplicationStatus, "SUBMITTED" | "CANCELLED">;
+  status: Exclude<SeminaryApplicationStatus, "SUBMITTED">;
 }) {
   const { data } = await api.patch<SeminaryApplicationResponse>(
     `/seminary/applications/${id}/status`,
+    { status, reviewRemarks },
+  );
+
+  return data;
+}
+
+export async function getSeminaryEnrollments(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: SeminaryApplicationStatus;
+}) {
+  const { data } = await api.get<SeminaryApplicationsResponse>(
+    "/seminary/enrollments",
+    { params },
+  );
+
+  return data;
+}
+
+export async function updateSeminaryEnrollmentStatus({
+  id,
+  reviewRemarks,
+  status,
+}: {
+  id: string;
+  reviewRemarks?: string;
+  status: Exclude<SeminaryApplicationStatus, "SUBMITTED">;
+}) {
+  const { data } = await api.patch<SeminaryApplicationResponse>(
+    `/seminary/enrollments/${id}/status`,
     { status, reviewRemarks },
   );
 
@@ -229,6 +289,291 @@ export async function deleteSeminaryCourse(id: string) {
   return data;
 }
 
+export async function getSeminaryStudyMaterials(params?: {
+  limit?: number;
+  page?: number;
+  search?: string;
+  status?: SeminaryStudyMaterialStatus;
+  subject?: string;
+  type?: SeminaryStudyMaterialType;
+}) {
+  const { data } = await api.get<SeminaryStudyMaterialsResponse>(
+    "/seminary/study-materials",
+    { params },
+  );
+
+  return data;
+}
+
+export async function createSeminaryStudyMaterial(
+  payload: SeminaryStudyMaterialPayload,
+) {
+  const { data } = await api.post<SeminaryStudyMaterialResponse>(
+    "/seminary/study-materials",
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryStudyMaterial({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: Omit<
+    SeminaryStudyMaterialPayload,
+    "fileName" | "fileSize" | "fileUrl" | "mimeType"
+  >;
+}) {
+  const { data } = await api.put<SeminaryStudyMaterialResponse>(
+    `/seminary/study-materials/${encodeURIComponent(id)}`,
+    payload,
+  );
+
+  return data;
+}
+
+export async function deleteSeminaryStudyMaterial(id: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/study-materials/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
+export async function getSeminaryAssignments(params?: {
+  limit?: number;
+  page?: number;
+  search?: string;
+  status?: SeminaryAssignmentStatus;
+  subject?: string;
+}) {
+  const { data } = await api.get<SeminaryAssignmentsResponse>(
+    "/seminary/assignments",
+    { params },
+  );
+
+  return data;
+}
+
+export async function createSeminaryAssignment(payload: SeminaryAssignmentPayload) {
+  const { data } = await api.post<SeminaryAssignmentResponse>(
+    "/seminary/assignments",
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryAssignment({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryAssignmentPayload;
+}) {
+  const { data } = await api.put<SeminaryAssignmentResponse>(
+    `/seminary/assignments/${encodeURIComponent(id)}`,
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryAssignmentStatus({
+  id,
+  status,
+}: {
+  id: string;
+  status: SeminaryAssignmentStatus;
+}) {
+  const { data } = await api.patch<SeminaryAssignmentResponse>(
+    `/seminary/assignments/${encodeURIComponent(id)}/status`,
+    { status },
+  );
+
+  return data;
+}
+
+export async function deleteSeminaryAssignment(id: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/assignments/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
+export async function getSeminaryExaminations(params?: {
+  limit?: number;
+  page?: number;
+  search?: string;
+  status?: SeminaryExaminationStatus;
+  subject?: string;
+}) {
+  const { data } = await api.get<SeminaryExaminationsResponse>(
+    "/seminary/examinations",
+    { params },
+  );
+
+  return data;
+}
+
+export async function getSeminaryExamination(id: string) {
+  const { data } = await api.get<SeminaryExaminationResponse>(
+    `/seminary/examinations/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
+export async function createSeminaryExamination(
+  payload: SeminaryExaminationPayload,
+) {
+  const { data } = await api.post<SeminaryExaminationResponse>(
+    "/seminary/examinations",
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryExamination({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryExaminationPayload;
+}) {
+  const { data } = await api.put<SeminaryExaminationResponse>(
+    `/seminary/examinations/${encodeURIComponent(id)}`,
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryExaminationStatus({
+  id,
+  status,
+}: {
+  id: string;
+  status: SeminaryExaminationStatus;
+}) {
+  const { data } = await api.patch<SeminaryExaminationResponse>(
+    `/seminary/examinations/${encodeURIComponent(id)}/status`,
+    { status },
+  );
+
+  return data;
+}
+
+export async function deleteSeminaryExamination(id: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/examinations/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
+export async function getSeminaryInstructors(params?: {
+  limit?: number;
+  page?: number;
+  search?: string;
+  status?: SeminaryInstructorStatus;
+  teachingProgram?: string;
+}) {
+  const { data } = await api.get<SeminaryInstructorsResponse>(
+    "/seminary/instructors",
+    { params },
+  );
+
+  return data;
+}
+
+export async function getSeminaryInstructor(id: string) {
+  const { data } = await api.get<SeminaryInstructorResponse>(
+    `/seminary/instructors/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
+export async function createSeminaryInstructor(
+  payload: SeminaryInstructorPayload,
+) {
+  const { data } = await api.post<SeminaryInstructorResponse>(
+    "/seminary/instructors",
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryInstructor({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryInstructorPayload;
+}) {
+  const { data } = await api.put<SeminaryInstructorResponse>(
+    `/seminary/instructors/${encodeURIComponent(id)}`,
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryInstructorStatus({
+  id,
+  status,
+}: {
+  id: string;
+  status: SeminaryInstructorStatus;
+}) {
+  const { data } = await api.patch<SeminaryInstructorResponse>(
+    `/seminary/instructors/${encodeURIComponent(id)}/status`,
+    { status },
+  );
+
+  return data;
+}
+
+export async function inviteSeminaryInstructor(id: string) {
+  const { data } = await api.post<SeminaryInstructorInviteResponse>(
+    `/seminary/instructors/${encodeURIComponent(id)}/invite`,
+  );
+
+  return data;
+}
+
+export async function acceptSeminaryInstructorInvite({
+  confirmPassword,
+  password,
+  token,
+}: {
+  confirmPassword: string;
+  password: string;
+  token: string;
+}) {
+  const { data } = await api.post<SeminaryInstructorResponse>(
+    "/seminary/instructors/accept-invite",
+    { confirmPassword, password },
+    { params: { token } },
+  );
+
+  return data;
+}
+
+export async function deleteSeminaryInstructor(id: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/instructors/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
 export async function getSeminaryAcademicYears(params?: {
   limit?: number;
   page?: number;
@@ -327,6 +672,143 @@ export async function updateSeminaryGradeConfiguration(
   return data;
 }
 
+export async function getSeminaryFeeConfiguration() {
+  const { data } = await api.get<SeminaryFeeConfigurationResponse>(
+    "/seminary/fee-configuration",
+  );
+
+  return data;
+}
+
+export async function updateSeminaryFeeConfiguration(
+  payload: SeminaryFeeConfigurationPayload,
+) {
+  const { data } = await api.put<SeminaryFeeConfigurationResponse>(
+    "/seminary/fee-configuration",
+    payload,
+  );
+
+  return data;
+}
+
+export async function getSeminaryGradeRecords(params?: {
+  limit?: number;
+  page?: number;
+  program?: string;
+  search?: string;
+  status?: SeminaryGradeRecordStatus;
+  term?: string;
+}) {
+  const { data } = await api.get<SeminaryGradeRecordsResponse>(
+    "/seminary/grade-records",
+    { params },
+  );
+
+  return data;
+}
+
+export async function getSeminaryGradeRecord(id: string) {
+  const { data } = await api.get<SeminaryGradeRecordResponse>(
+    `/seminary/grade-records/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
+export async function createSeminaryGradeRecord(
+  payload: SeminaryGradeRecordPayload,
+) {
+  const { data } = await api.post<SeminaryGradeRecordResponse>(
+    "/seminary/grade-records",
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryGradeRecord({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryGradeRecordPayload;
+}) {
+  const { data } = await api.put<SeminaryGradeRecordResponse>(
+    `/seminary/grade-records/${encodeURIComponent(id)}`,
+    payload,
+  );
+
+  return data;
+}
+
+export async function updateSeminaryGradeRecordStatus({
+  id,
+  status,
+}: {
+  id: string;
+  status: SeminaryGradeRecordStatus;
+}) {
+  const { data } = await api.patch<SeminaryGradeRecordResponse>(
+    `/seminary/grade-records/${encodeURIComponent(id)}/status`,
+    { status },
+  );
+
+  return data;
+}
+
+export async function deleteSeminaryGradeRecord(id: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/grade-records/${encodeURIComponent(id)}`,
+  );
+
+  return data;
+}
+
+export async function getSeminaryFeeCollections(params?: {
+  limit?: number;
+  page?: number;
+  programLevel?: string;
+  search?: string;
+  status?: SeminaryFeeCollectionStatus;
+}) {
+  const { data } = await api.get<SeminaryFeeCollectionsResponse>(
+    "/seminary/fee-collections",
+    { params },
+  );
+
+  return data;
+}
+
+export async function updateSeminaryFeeCollectionStatus({
+  id,
+  status,
+}: {
+  id: string;
+  status: SeminaryFeeCollectionStatus;
+}) {
+  const { data } = await api.patch<SeminaryFeeCollectionResponse>(
+    `/seminary/fee-collections/${encodeURIComponent(id)}/status`,
+    { status },
+  );
+
+  return data;
+}
+
+export async function updateSeminaryFeeCollectionPayment({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryFeeCollectionPaymentPayload;
+}) {
+  const { data } = await api.patch<SeminaryFeeCollectionResponse>(
+    `/seminary/fee-collections/${encodeURIComponent(id)}/payment`,
+    payload,
+  );
+
+  return data;
+}
+
 export async function generateSeminaryCredentialDocument({
   payload,
   studentId,
@@ -364,6 +846,14 @@ export async function getSeminaryCredentialDocuments({
 export async function verifySeminaryCredentialDocument(token: string) {
   const { data } = await api.get<SeminaryCredentialDocumentResponse>(
     `/seminary/credential-documents/verify/${encodeURIComponent(token)}`,
+  );
+
+  return data;
+}
+
+export async function verifyMemberCredentialDocument(token: string) {
+  const { data } = await api.get<MemberCredentialDocumentResponse>(
+    `/members/credential-documents/verify/${encodeURIComponent(token)}`,
   );
 
   return data;

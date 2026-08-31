@@ -106,6 +106,15 @@ const Page = () => {
           credentials or contact the Admissions Office for assistance.
         </p>
       </section>
+
+      <section className="mt-4 grid gap-3 rounded-md bg-white p-4 shadow-[0_12px_30px_rgba(10,51,39,0.06)] ring-1 ring-[#0b3327]/5 sm:grid-cols-2">
+        <Button variant="outline" asChild>
+          <Link href="/auth/registrar">Registrar Login</Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href="/auth/instructor">Instructor Login</Link>
+        </Button>
+      </section>
     </AuthShell>
   );
 };

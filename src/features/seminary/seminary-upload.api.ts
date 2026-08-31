@@ -10,6 +10,10 @@ const paymentReceiptUploader = genUploader({
   url: `${API_BASE_URL}/seminary/payment-receipts/upload`,
 });
 
+const studyMaterialUploader = genUploader({
+  url: `${API_BASE_URL}/seminary/study-materials/upload`,
+});
+
 const getServerData = (uploaded: unknown): SeminaryUploadedFile => {
   const item = uploaded as { serverData?: SeminaryUploadedFile };
 
@@ -34,6 +38,17 @@ export async function uploadSeminaryRequirement(file: File) {
 export async function uploadSeminaryPaymentReceipt(file: File) {
   const uploaded = await paymentReceiptUploader.uploadFiles(
     "seminaryPaymentReceiptUploader",
+    {
+      files: [file],
+    }
+  );
+
+  return getServerData(uploaded?.[0]);
+}
+
+export async function uploadSeminaryStudyMaterial(file: File) {
+  const uploaded = await studyMaterialUploader.uploadFiles(
+    "seminaryStudyMaterialUploader",
     {
       files: [file],
     }
