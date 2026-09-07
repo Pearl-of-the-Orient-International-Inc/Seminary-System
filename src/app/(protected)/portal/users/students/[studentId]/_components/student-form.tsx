@@ -442,7 +442,7 @@ export const StudentForm = ({ mode, studentId }: StudentFormProps) => {
         await updateStudentMutation.mutateAsync({ payload, studentId });
       }
 
-      router.push("/admin/users/students");
+      router.push("/portal/users/students");
     } catch (error) {
       const apiError = toApiError(error);
       form.setError("root", {

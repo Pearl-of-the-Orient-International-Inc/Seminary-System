@@ -45,7 +45,7 @@ export const CellActions = ({
 
     <DropdownMenuContent align="end" className="w-48">
       <DropdownMenuItem asChild>
-        <Link href={`/admin/users/students/${encodeURIComponent(data.id)}`}>
+        <Link href={`/portal/users/students/${encodeURIComponent(data.id)}`}>
           <Pencil className="size-4" />
           Edit profile
         </Link>

@@ -51,7 +51,7 @@ export const CellActions = ({
       </DropdownMenuItem>
       {data.id ? (
         <DropdownMenuItem asChild>
-          <Link href={`/admin/users/instructors/${data.id}`}>
+          <Link href={`/portal/users/instructors/${data.id}`}>
             <Pencil className="size-4" />
             Edit instructor
           </Link>

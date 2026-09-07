@@ -319,7 +319,7 @@ export const InstructorForm = ({ instructorId }: InstructorFormProps) => {
         title: instructorId ? "Instructor updated" : "Instructor created",
         description: `${values.name.trim()} was saved to the faculty registry.`,
       });
-      router.push("/admin/users/instructors");
+      router.push("/portal/users/instructors");
     } catch (error) {
       const apiError = toApiError(error);
 
