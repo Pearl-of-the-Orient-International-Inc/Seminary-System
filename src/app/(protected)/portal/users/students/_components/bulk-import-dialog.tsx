@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -86,7 +87,7 @@ const editableColumns: EditableColumn[] = [
     type: "select",
   },
   { key: "homeAddress", label: "Address" },
-  { key: "civilStatus", label: "Civil Status" },
+  { key: "civilStatus", label: "Civil Status", type: "select" },
 ];
 
 const genderOptions = ["Male", "Female", "Prefer not to say"];
@@ -97,6 +98,13 @@ const studentStatusOptions = [
   "Graduating",
   "Leave of Absence",
   "Inactive",
+];
+const civilStatusOptions = [
+  "Single",
+  "Married",
+  "Widowed",
+  "Separated",
+  "Annulled",
 ];
 
 const normalizeHeader = (header: string) =>
@@ -117,6 +125,20 @@ const normalizeGender = (value: string) => {
   }
 
   return value.trim();
+};
+
+const normalizeCivilStatus = (value: string) => {
+  const normalized = value.trim().toLowerCase();
+  const civilStatusAliases: Record<string, string> = {
+    annulled: "Annulled",
+    married: "Married",
+    separated: "Separated",
+    single: "Single",
+    widow: "Widowed",
+    widowed: "Widowed",
+  };
+
+  return civilStatusAliases[normalized] ?? value.trim();
 };
 
 const normalizeProgramText = (value: string) =>
@@ -247,7 +269,7 @@ const mapExcelRow = (
         "affiliation",
       ]) || "In-House",
     studentStatus: getValue(row, ["status", "student status"]) || "Active",
-    civilStatus: getValue(row, ["civil status"]),
+    civilStatus: normalizeCivilStatus(getValue(row, ["civil status"])),
   };
 };
 
@@ -304,6 +326,7 @@ export const BulkImportDialog = ({
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const bulkImportMutation = useBulkImportSeminaryStudentsMutation();
+  const { toast } = useToast();
 
   const populatedRows = useMemo(
     () =>
@@ -381,13 +404,24 @@ export const BulkImportDialog = ({
     setError(null);
 
     if (!populatedRows.length) {
-      setError("Add at least one row before importing.");
+      const message = "Add at least one row before importing.";
+      setError(message);
+      toast({
+        title: "Import failed",
+        description: message,
+        variant: "error",
+      });
       return;
     }
 
     try {
-      await bulkImportMutation.mutateAsync({
+      const response = await bulkImportMutation.mutateAsync({
         students: populatedRows.map(stripRowId),
+      });
+      toast({
+        title: "Students imported",
+        description: response.message,
+        variant: "success",
       });
       setRows([]);
       setSelectedRowId(null);
@@ -395,11 +429,15 @@ export const BulkImportDialog = ({
     } catch (err) {
       const apiError = toApiError(err);
       const firstIssue = apiError.errors?.[0];
-      setError(
-        firstIssue
-          ? `${firstIssue.path}: ${firstIssue.message}`
-          : (apiError.message ?? "Bulk import failed."),
-      );
+      const message = firstIssue
+        ? `${firstIssue.path}: ${firstIssue.message}`
+        : (apiError.message ?? "Bulk import failed.");
+      setError(message);
+      toast({
+        title: "Import failed",
+        description: message,
+        variant: "error",
+      });
     }
   };
 
@@ -541,6 +579,26 @@ export const BulkImportDialog = ({
           </SelectTrigger>
           <SelectContent>
             {studentStatusOptions.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+
+    if (column.key === "civilStatus") {
+      return (
+        <Select
+          value={fieldValue}
+          onValueChange={(value) => updateCell(row.rowId, column.key, value)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select civil status" />
+          </SelectTrigger>
+          <SelectContent>
+            {civilStatusOptions.map((option) => (
               <SelectItem key={option} value={option}>
                 {option}
               </SelectItem>
