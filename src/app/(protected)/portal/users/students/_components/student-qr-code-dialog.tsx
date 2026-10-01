@@ -39,6 +39,8 @@ type StudentQrCodeDialogProps = {
   student: StudentRecord | null;
 };
 
+type QrCodeDestination = "STUDENT_ID" | "CREDENTIAL";
+
 export function StudentQrCodeDialog({
   open,
   onOpenChange,
@@ -48,26 +50,39 @@ export function StudentQrCodeDialog({
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [selectedType, setSelectedType] =
     useState<SeminaryCredentialDocumentType>("CERTIFICATE");
+  const [selectedDestination, setSelectedDestination] =
+    useState<QrCodeDestination>("STUDENT_ID");
   const generateDocumentMutation =
     useGenerateSeminaryCredentialDocumentMutation();
   const { mutate: generateDocument } = generateDocumentMutation;
   const credentialDocument = generateDocumentMutation.data?.data;
 
   const verificationUrl = useMemo(() => {
-    if (!credentialDocument?.verificationToken || typeof window === "undefined") {
+    if (typeof window === "undefined") {
       return "";
     }
 
-    const websiteUrl =
-      process.env.NEXT_PUBLIC_WEBSITE_URL?.replace(/\/$/, "") ??
-      "https://pearlchaplaincy.org";
+    const seminaryUrl =
+      process.env.NEXT_PUBLIC_SEMINARY_URL?.replace(/\/$/, "") ??
+      (process.env.NODE_ENV === "development"
+        ? "http://localhost:3001"
+        : "https://seminary.pearlchaplaincy.org");
 
-    return `${websiteUrl}/credentials/verify/${encodeURIComponent(
-      credentialDocument.verificationToken,
-    )}`;
-  }, [credentialDocument]);
+    if (selectedDestination === "STUDENT_ID") {
+      return student?.id
+        ? `${seminaryUrl}/student/${encodeURIComponent(student.id)}`
+        : "";
+    }
+
+    return credentialDocument?.verificationToken
+      ? `${seminaryUrl}/credentials/verify/${encodeURIComponent(
+          credentialDocument.verificationToken,
+        )}`
+      : "";
+  }, [credentialDocument, selectedDestination, student?.id]);
 
   const isGenerating =
+    selectedDestination === "CREDENTIAL" &&
     open &&
     (generateDocumentMutation.isPending ||
       (Boolean(verificationUrl) && generatedForUrl !== verificationUrl));
@@ -78,13 +93,13 @@ export function StudentQrCodeDialog({
     : null;
 
   useEffect(() => {
-    if (!open || !student?.id) return;
+    if (!open || !student?.id || selectedDestination !== "CREDENTIAL") return;
 
     generateDocument({
       payload: { type: selectedType },
       studentId: student.id,
     });
-  }, [generateDocument, open, selectedType, student?.id]);
+  }, [generateDocument, open, selectedDestination, selectedType, student?.id]);
 
   useEffect(() => {
     let active = true;
@@ -122,7 +137,9 @@ export function StudentQrCodeDialog({
 
     const link = document.createElement("a");
     link.href = visibleQrDataUrl;
-    link.download = `${buildFileBaseName(student)}-authenticity-qr.png`;
+    link.download = `${buildFileBaseName(student)}-${
+      selectedDestination === "STUDENT_ID" ? "student-id" : "authenticity"
+    }-qr.png`;
     link.click();
   };
 
@@ -130,15 +147,15 @@ export function StudentQrCodeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[calc(100vh-2rem)] w-[min(calc(100vw-2rem),42rem)] max-w-none! overflow-y-auto overflow-x-hidden">
         <DialogHeader>
-          <DialogTitle>Authenticity QR Code</DialogTitle>
+          <DialogTitle>Student QR Code</DialogTitle>
           <DialogDescription>
-            Generate public verification QR code for{" "}
+            Generate a public student-ID profile or credential verification QR code for{" "}
             {student?.name ?? "this student"}.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_120px]">
+          <div className="grid min-w-0 gap-3">
             <div className="min-w-0 overflow-hidden rounded-lg border bg-muted/30 px-3">
               <p className="mt-1.5 truncate text-sm font-medium text-foreground">
                 {verificationUrl || "Generating..."}
@@ -146,12 +163,29 @@ export function StudentQrCodeDialog({
             </div>
 
             <Select
+              value={selectedDestination}
+              onValueChange={(value) =>
+                setSelectedDestination(value as QrCodeDestination)
+              }
+            >
+              <SelectTrigger className="w-full min-w-0">
+                <SelectValue placeholder="QR destination" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="STUDENT_ID">Student ID profile</SelectItem>
+                <SelectItem value="CREDENTIAL">Credential document</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedDestination === "CREDENTIAL" ? (
+            <Select
               value={selectedType}
               onValueChange={(value) =>
                 setSelectedType(value as SeminaryCredentialDocumentType)
               }
             >
-              <SelectTrigger className="h-full min-w-0">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Document type" />
               </SelectTrigger>
               <SelectContent>
@@ -162,9 +196,9 @@ export function StudentQrCodeDialog({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          ) : null}
 
-          {credentialDocument ? (
+          {selectedDestination === "CREDENTIAL" && credentialDocument ? (
             <div className="min-w-0 overflow-hidden rounded-lg border bg-muted/30 p-4 text-sm">
               <div className="line-clamp-2 font-medium">
                 {credentialDocument.title ??
@@ -177,7 +211,7 @@ export function StudentQrCodeDialog({
             </div>
           ) : null}
 
-          {errorMessage ? (
+          {selectedDestination === "CREDENTIAL" && errorMessage ? (
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               {errorMessage}
             </div>
@@ -187,12 +221,12 @@ export function StudentQrCodeDialog({
             {isGenerating ? (
               <div className="text-muted-foreground flex h-64 w-64 items-center justify-center gap-2">
                 <LoaderCircle className="size-4 animate-spin" />
-                Generating QR code...
+                Generating credential QR code...
               </div>
             ) : visibleQrDataUrl ? (
               <Image
                 src={visibleQrDataUrl}
-                alt={`Authenticity QR code for ${student?.name ?? "student"}`}
+                alt={`${selectedDestination === "STUDENT_ID" ? "Student ID" : "Credential authenticity"} QR code for ${student?.name ?? "student"}`}
                 width={320}
                 height={320}
                 className="h-auto w-full max-w-72 object-contain"
@@ -211,7 +245,7 @@ export function StudentQrCodeDialog({
             <Button asChild variant="outline">
               <a href={verificationUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="size-4" />
-                Open verification
+                Open {selectedDestination === "STUDENT_ID" ? "student profile" : "verification"}
               </a>
             </Button>
           ) : null}

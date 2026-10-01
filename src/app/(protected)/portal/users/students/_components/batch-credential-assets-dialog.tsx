@@ -223,11 +223,13 @@ async function buildQrDataUrl(value: string) {
 }
 
 function buildVerificationUrl(token: string) {
-  const websiteUrl =
-    process.env.NEXT_PUBLIC_WEBSITE_URL?.replace(/\/$/, "") ??
-    "https://pearlchaplaincy.org";
+  const seminaryUrl =
+    process.env.NEXT_PUBLIC_SEMINARY_URL?.replace(/\/$/, "") ??
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:3001"
+      : "https://seminary.pearlchaplaincy.org");
 
-  return `${websiteUrl}/credentials/verify/${encodeURIComponent(token)}`;
+  return `${seminaryUrl}/credentials/verify/${encodeURIComponent(token)}`;
 }
 
 function downloadDataUrl(dataUrl: string, fileName: string) {
