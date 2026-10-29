@@ -18,10 +18,27 @@ import type {
   SeminaryAcademicYearsResponse,
   SeminaryAcademicYearSession,
   SeminaryAcademicYearStatus,
+  SeminaryDashboardResponse,
+  SeminaryReportsResponse,
+  SeminaryReportScope,
+  SeminaryAnnouncementPayload,
+  SeminaryAnnouncementResponse,
+  SeminaryAnnouncementsResponse,
   SeminaryCoursePayload,
   SeminaryCourseResponse,
+  SeminaryCourseSchedulePayload,
+  SeminaryCourseScheduleResponse,
+  SeminaryCourseSchedulesResponse,
   SeminaryCoursesResponse,
   SeminaryCourseStatus,
+  SeminaryDocumentRequestPayload,
+  SeminaryDocumentRequestResponse,
+  SeminaryDocumentRequestsResponse,
+  SeminaryDocumentRequestStatus,
+  SeminaryDocumentRequestStatusPayload,
+  SeminaryDocumentRequestType,
+  SeminaryDocumentRequestTypeResponse,
+  SeminaryDocumentRequestTypesResponse,
   SeminaryCredentialDocumentResponse,
   SeminaryCredentialDocumentsResponse,
   SeminaryCredentialDocumentType,
@@ -35,9 +52,11 @@ import type {
   SeminaryFeeCollectionPaymentPayload,
   SeminaryFeeCollectionStatus,
   SeminaryGradeRecordPayload,
+  SeminaryBulkGradeEncodingPayload,
   SeminaryGradeRecordResponse,
   SeminaryGradeRecordsResponse,
   SeminaryGradeRecordStatus,
+  SeminaryStudentPortalResponse,
   SeminaryInstructorPayload,
   SeminaryInstructorResponse,
   SeminaryInstructorInviteResponse,
@@ -70,6 +89,13 @@ export async function getCurrentSeminaryApplication() {
     "/seminary/current/application",
   );
 
+  return data;
+}
+
+export async function getCurrentStudentPortal() {
+  const { data } = await api.get<SeminaryStudentPortalResponse>(
+    "/seminary/current/student-portal",
+  );
   return data;
 }
 
@@ -203,6 +229,22 @@ export async function deleteSeminaryStudent(studentId: string) {
   return data;
 }
 
+export async function changeSeminaryStudentPassword({
+  studentId,
+  password,
+  confirmPassword,
+}: {
+  studentId: string;
+  password: string;
+  confirmPassword: string;
+}) {
+  const { data } = await api.patch<{ code: string; message: string }>(
+    `/seminary/students/${encodeURIComponent(studentId)}/password`,
+    { password, confirmPassword },
+  );
+  return data;
+}
+
 export async function bulkImportSeminaryStudents(payload: {
   students: SeminaryStudentPayload[];
 }) {
@@ -286,6 +328,178 @@ export async function deleteSeminaryCourse(id: string) {
     `/seminary/courses/${encodeURIComponent(id)}`,
   );
 
+  return data;
+}
+
+export async function getSeminaryDashboard(params?: {
+  startDate?: string;
+  endDate?: string;
+}) {
+  const { data } = await api.get<SeminaryDashboardResponse>(
+    "/seminary/dashboard",
+    { params },
+  );
+  return data;
+}
+
+export async function getSeminaryReports(params?: {
+  startDate?: string;
+  endDate?: string;
+  programLevel?: "CERTIFICATE" | "BACHELOR" | "MASTER_WITH_THESIS" | "DOCTORATE_WITH_DISSERTATION";
+  scope?: SeminaryReportScope;
+}) {
+  const { data } = await api.get<SeminaryReportsResponse>("/seminary/reports", { params });
+  return data;
+}
+
+export async function getSeminaryAnnouncements() {
+  const { data } = await api.get<SeminaryAnnouncementsResponse>(
+    "/seminary/announcements",
+  );
+  return data;
+}
+
+export async function createSeminaryAnnouncement(
+  payload: SeminaryAnnouncementPayload,
+) {
+  const { data } = await api.post<SeminaryAnnouncementResponse>(
+    "/seminary/announcements",
+    payload,
+  );
+  return data;
+}
+
+export async function updateSeminaryAnnouncement({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryAnnouncementPayload;
+}) {
+  const { data } = await api.put<SeminaryAnnouncementResponse>(
+    `/seminary/announcements/${encodeURIComponent(id)}`,
+    payload,
+  );
+  return data;
+}
+
+export async function deleteSeminaryAnnouncement(id: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/announcements/${encodeURIComponent(id)}`,
+  );
+  return data;
+}
+
+export async function getSeminaryCourseSchedules(params?: {
+  academicYear?: string;
+  period?: string;
+  className?: string;
+  status?: string;
+}) {
+  const { data } = await api.get<SeminaryCourseSchedulesResponse>(
+    "/seminary/course-schedules",
+    { params },
+  );
+  return data;
+}
+
+export async function createSeminaryCourseSchedule(
+  payload: SeminaryCourseSchedulePayload,
+) {
+  const { data } = await api.post<SeminaryCourseScheduleResponse>(
+    "/seminary/course-schedules",
+    payload,
+  );
+  return data;
+}
+
+export async function updateSeminaryCourseSchedule({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryCourseSchedulePayload;
+}) {
+  const { data } = await api.put<SeminaryCourseScheduleResponse>(
+    `/seminary/course-schedules/${encodeURIComponent(id)}`,
+    payload,
+  );
+  return data;
+}
+
+export async function deleteSeminaryCourseSchedule(id: string) {
+  const { data } = await api.delete<{ code: string; message: string }>(
+    `/seminary/course-schedules/${encodeURIComponent(id)}`,
+  );
+  return data;
+}
+
+export async function getSeminaryDocumentRequestTypes(params?: {
+  includeInactive?: boolean;
+}) {
+  const { data } = await api.get<SeminaryDocumentRequestTypesResponse>(
+    "/seminary/document-request-types",
+    { params: { includeInactive: params?.includeInactive ? "true" : undefined } },
+  );
+  return data;
+}
+
+export async function createSeminaryDocumentRequestType(
+  payload: Omit<SeminaryDocumentRequestType, "id">,
+) {
+  const { data } = await api.post<SeminaryDocumentRequestTypeResponse>(
+    "/seminary/document-request-types",
+    payload,
+  );
+  return data;
+}
+
+export async function updateSeminaryDocumentRequestType({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: Partial<Omit<SeminaryDocumentRequestType, "id">>;
+}) {
+  const { data } = await api.put<SeminaryDocumentRequestTypeResponse>(
+    `/seminary/document-request-types/${encodeURIComponent(id)}`,
+    payload,
+  );
+  return data;
+}
+
+export async function getSeminaryDocumentRequests(params?: {
+  status?: SeminaryDocumentRequestStatus;
+  documentTypeId?: string;
+}) {
+  const { data } = await api.get<SeminaryDocumentRequestsResponse>(
+    "/seminary/document-requests",
+    { params },
+  );
+  return data;
+}
+
+export async function createSeminaryDocumentRequest(
+  payload: SeminaryDocumentRequestPayload,
+) {
+  const { data } = await api.post<SeminaryDocumentRequestResponse>(
+    "/seminary/document-requests",
+    payload,
+  );
+  return data;
+}
+
+export async function updateSeminaryDocumentRequestStatus({
+  id,
+  payload,
+}: {
+  id: string;
+  payload: SeminaryDocumentRequestStatusPayload;
+}) {
+  const { data } = await api.patch<SeminaryDocumentRequestResponse>(
+    `/seminary/document-requests/${encodeURIComponent(id)}/status`,
+    payload,
+  );
   return data;
 }
 
@@ -723,6 +937,16 @@ export async function createSeminaryGradeRecord(
     payload,
   );
 
+  return data;
+}
+
+export async function bulkEncodeSeminaryGrades(
+  payload: SeminaryBulkGradeEncodingPayload,
+) {
+  const { data } = await api.post<SeminaryGradeRecordsResponse>(
+    "/seminary/grade-records/encode",
+    payload,
+  );
   return data;
 }
 

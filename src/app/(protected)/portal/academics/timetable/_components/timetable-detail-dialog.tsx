@@ -23,6 +23,7 @@ type TimetableDetailDialogProps = {
   section?: string;
   onEdit: () => void;
   onDelete: () => void;
+  canManage?: boolean;
 };
 
 export const TimetableDetailDialog = ({
@@ -34,6 +35,7 @@ export const TimetableDetailDialog = ({
   section,
   onEdit,
   onDelete,
+  canManage = false,
 }: TimetableDetailDialogProps) => {
   if (!entry || !entry.subject) {
     return null;
@@ -69,7 +71,7 @@ export const TimetableDetailDialog = ({
           </div>
         </div>
 
-        <DialogFooter>
+        {canManage && <DialogFooter>
           <Button type="button" variant="outline" onClick={onEdit}>
             <Pencil className="size-4" />
             Edit Slot
@@ -78,7 +80,7 @@ export const TimetableDetailDialog = ({
             <Trash2 className="size-4" />
             Delete Slot
           </Button>
-        </DialogFooter>
+        </DialogFooter>}
       </DialogContent>
     </Dialog>
   );

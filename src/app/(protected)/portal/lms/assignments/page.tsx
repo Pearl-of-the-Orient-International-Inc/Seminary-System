@@ -6,8 +6,6 @@ import { useRouter } from "next/navigation";
 import {
   BookOpen,
   CheckCircle2,
-  FileCheck2,
-  Filter,
   Hourglass,
   Plus,
 } from "lucide-react";
@@ -73,10 +71,7 @@ import {
   type AssignmentType,
 } from "./_components/columns";
 
-type AcademicYearOption = "2024-2025" | "2025-2026";
 type SubjectFilterOption = "All Subjects" | string;
-
-const academicYearOptions: AcademicYearOption[] = ["2024-2025", "2025-2026"];
 
 const assignmentStatusLabelMap: Record<
   SeminaryAssignmentStatus,
@@ -142,8 +137,6 @@ const Page = () => {
   const router = useRouter();
   const { data: currentUser } = useCurrentUserQuery();
   const { toast } = useToast();
-  const [academicYear, setAcademicYear] =
-    useState<AcademicYearOption>("2024-2025");
   const [subjectFilter, setSubjectFilter] =
     useState<SubjectFilterOption>("All Subjects");
   const [statusFilter, setStatusFilter] = useState<
@@ -227,14 +220,6 @@ const Page = () => {
         accentClassName:
           "bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
       },
-      {
-        title: "Submitted",
-        value: "0",
-        description: "Total submissions",
-        icon: <FileCheck2 className="size-6" />,
-        accentClassName:
-          "bg-violet-500/10 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300",
-      },
     ];
   }, [assignments]);
 
@@ -308,7 +293,9 @@ const Page = () => {
     setAssignmentDialogOpen(true);
   };
 
-  const handleSubmitAssignment = async (values: AssignmentDialogValues) => {
+  const handleSubmitAssignment = async (
+    values: AssignmentDialogValues,
+  ): Promise<boolean> => {
     try {
       const payload = toAssignmentPayload(values);
 
@@ -332,10 +319,9 @@ const Page = () => {
         description: `${values.title} was saved.`,
         variant: "success",
       });
-      setAssignmentDialogOpen(false);
-      setSelectedAssignment(null);
       await assignmentsQuery.refetch();
       router.refresh();
+      return true;
     } catch (error) {
       const apiError = toApiError(error);
       toast({
@@ -343,6 +329,7 @@ const Page = () => {
         description: apiError.message ?? "Unable to save assignment.",
         variant: "error",
       });
+      return false;
     }
   };
 
@@ -364,7 +351,7 @@ const Page = () => {
             Assignments
           </h1>
           <p className="text-sm text-muted-foreground">
-            Create, manage and track student assignments.
+            Create, publish, and manage student assignments.
           </p>
         </div>
 
@@ -387,7 +374,7 @@ const Page = () => {
         </Breadcrumb>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {stats.map((stat) => (
           <Card
             key={stat.title}
@@ -415,30 +402,7 @@ const Page = () => {
 
       <Card className="border-border/70 shadow-sm">
         <CardContent className="space-y-5">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">
-                Academic Year
-              </p>
-              <Select
-                value={academicYear}
-                onValueChange={(value) =>
-                  setAcademicYear(value as AcademicYearOption)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select academic year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {academicYearOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
+          <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Subject</p>
               <Select
@@ -492,16 +456,10 @@ const Page = () => {
             emptyMessage="No assignments found."
             pageSizeOptions={[6, 10, 20]}
             toolbarActions={
-              <>
-                <Button variant="outline">
-                  <Filter className="size-4" />
-                  Filters
-                </Button>
-                <Button onClick={handleOpenCreate}>
-                  <Plus className="size-4" />
-                  Create Assignment
-                </Button>
-              </>
+              <Button onClick={handleOpenCreate}>
+                <Plus className="size-4" />
+                Create Assignment
+              </Button>
             }
             onDeleteSelected={async (selectedRows) => {
               await Promise.all(

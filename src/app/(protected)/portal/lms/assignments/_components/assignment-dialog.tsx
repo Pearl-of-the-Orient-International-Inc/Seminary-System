@@ -67,7 +67,7 @@ type AssignmentDialogValues = z.infer<typeof formSchema>;
 type AssignmentDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (values: AssignmentDialogValues) => void;
+  onSubmit: (values: AssignmentDialogValues) => Promise<boolean>;
   record?: AssignmentRecord | null;
   subjectOptions: string[];
   submitting?: boolean;
@@ -191,9 +191,8 @@ export const AssignmentDialog = ({
 
         <ScrollArea className="max-h-[80vh] p-5">
           <form
-            onSubmit={form.handleSubmit((values) => {
-              onSubmit(values);
-              onOpenChange(false);
+            onSubmit={form.handleSubmit(async (values) => {
+              if (await onSubmit(values)) onOpenChange(false);
             })}
             className="space-y-5"
           >

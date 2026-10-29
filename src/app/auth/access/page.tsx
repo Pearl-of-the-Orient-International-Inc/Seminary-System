@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Eye,
   EyeOff,
@@ -14,9 +15,37 @@ import { AuthShell } from "../_components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { useLoginMutation, toApiError } from "@/features/auth/auth.hooks";
+import type { AuthUser } from "@/features/auth/auth.types";
+import { authStore } from "@/lib/auth-store";
+import { useToast } from "@/hooks/use-toast";
 
 const Page = () => {
+  const router = useRouter();
+  const { toast } = useToast();
+  const loginMutation = useLoginMutation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      const response = await loginMutation.mutateAsync({ email, password });
+      const user: AuthUser = response.user;
+      if (user.role !== "MEMBER" || response.mfaRequired) {
+        authStore.clear();
+        toast({ title: "Access restricted", description: "Please use the correct portal for this account.", variant: "error" });
+        return;
+      }
+      toast({ title: "Login successful", description: "Welcome to your student portal.", variant: "success" });
+      router.push("/students/dashboard");
+    } catch (error) {
+      const apiError = toApiError(error);
+      const validationMessage = apiError.errors?.map((issue) => issue.message).join(" ");
+      toast({ title: "Login failed", description: validationMessage ?? apiError.message ?? "Check your student number and password.", variant: "error" });
+    }
+  };
 
   return (
     <AuthShell>
@@ -35,19 +64,20 @@ const Page = () => {
             Student Portal Login
           </h1>
           <p className="mt-2 text-sm leading-6 text-[#31463f]">
-            Sign in with your account to continue to your student portal.
+            Sign in with your student number and password.
           </p>
         </div>
 
-        <form className="mt-8 space-y-5">
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           <label className="block">
-            <span className="text-sm font-bold">Student Number</span>
+            <span className="text-sm font-bold">Student number</span>
             <div className="relative mt-2">
               <IdCard className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#0b4b39]" />
               <Input
                 type="text"
-                inputMode="numeric"
-                placeholder="Enter your student number"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Example: POTSC-26-0001"
                 className="h-10 border-[#0b3327]/10 bg-white pl-11 text-sm shadow-none focus-visible:border-[#0b4b39] focus-visible:ring-3 focus-visible:ring-[#0b4b39]/12"
               />
             </div>
@@ -59,6 +89,8 @@ const Page = () => {
               <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#0b4b39]" />
               <Input
                 type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="Enter your password"
                 className="h-10 border-[#0b3327]/10 bg-white pl-11 pr-11 text-sm shadow-none focus-visible:border-[#0b4b39] focus-visible:ring-3 focus-visible:ring-[#0b4b39]/12"
               />
@@ -93,8 +125,8 @@ const Page = () => {
             </Link>
           </div>
 
-          <Button className="h-10 w-full rounded-md bg-[#003f2b] text-sm font-semibold text-white shadow-none hover:bg-[#07533a]">
-            Log In
+          <Button type="submit" disabled={loginMutation.isPending} className="h-10 w-full rounded-md bg-[#003f2b] text-sm font-semibold text-white shadow-none hover:bg-[#07533a]">
+            {loginMutation.isPending ? "Logging in…" : "Log In"}
           </Button>
         </form>
       </section>
@@ -102,8 +134,8 @@ const Page = () => {
       <section className="mt-6 rounded-md bg-[#f8faf9] p-6 shadow-[0_12px_30px_rgba(10,51,39,0.06)] ring-1 ring-[#0b3327]/5">
         <h2 className="text-lg font-bold">New Student?</h2>
         <p className="mt-1 text-sm text-[#31463f]">
-          If you are a new student, please check your email for your account
-          credentials or contact the Admissions Office for assistance.
+          Your registrar provides your student number when your record is created.
+          Your first password is <span className="font-semibold">Student123@</span>.
         </p>
       </section>
 

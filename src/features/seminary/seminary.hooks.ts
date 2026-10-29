@@ -14,6 +14,13 @@ export const useCurrentSeminaryApplicationQuery = () =>
     staleTime: 60_000,
   });
 
+export const useCurrentStudentPortalQuery = () =>
+  useQuery({
+    queryKey: ["seminary", "current", "student-portal"],
+    queryFn: seminaryApi.getCurrentStudentPortal,
+    staleTime: 30_000,
+  });
+
 export const useSeminaryApplicationsQuery = (params?: {
   limit?: number;
   page?: number;
@@ -201,6 +208,13 @@ export const useDeleteSeminaryStudentMutation = () => {
   });
 };
 
+export const useChangeSeminaryStudentPasswordMutation = () =>
+  useMutation({
+    mutationFn: seminaryApi.changeSeminaryStudentPassword,
+    throwOnError: false,
+    meta: { feature: "seminary.student.password.change" },
+  });
+
 export const useBulkImportSeminaryStudentsMutation = () => {
   const queryClient = useQueryClient();
 
@@ -238,10 +252,11 @@ export const useSeminaryCoursesQuery = (params?: {
   program?: string;
   search?: string;
   status?: string;
-}) =>
+}, options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: ["seminary", "courses", params],
     queryFn: () => seminaryApi.getSeminaryCourses(params),
+    enabled: options?.enabled ?? true,
     staleTime: 30_000,
   });
 
@@ -302,6 +317,164 @@ export const useDeleteSeminaryCourseMutation = () => {
       });
     },
     meta: { feature: "seminary.course.delete" },
+  });
+};
+
+export const useSeminaryDashboardQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryDashboard>[0],
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    queryKey: ["seminary", "dashboard", params],
+    queryFn: () => seminaryApi.getSeminaryDashboard(params),
+    enabled: options?.enabled ?? true,
+    staleTime: 30_000,
+  });
+
+export const useSeminaryReportsQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryReports>[0],
+  options?: { enabled?: boolean },
+) =>
+  useQuery({
+    queryKey: ["seminary", "reports", params],
+    queryFn: () => seminaryApi.getSeminaryReports(params),
+    enabled: options?.enabled ?? true,
+    staleTime: 30_000,
+  });
+
+export const useSeminaryAnnouncementsQuery = () =>
+  useQuery({
+    queryKey: ["seminary", "announcements"],
+    queryFn: seminaryApi.getSeminaryAnnouncements,
+    staleTime: 30_000,
+  });
+
+const invalidateSeminaryAnnouncements = (queryClient: ReturnType<typeof useQueryClient>) =>
+  queryClient.invalidateQueries({ queryKey: ["seminary", "announcements"] });
+
+export const useCreateSeminaryAnnouncementMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryAnnouncement,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryAnnouncements(queryClient),
+  });
+};
+
+export const useUpdateSeminaryAnnouncementMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryAnnouncement,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryAnnouncements(queryClient),
+  });
+};
+
+export const useDeleteSeminaryAnnouncementMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.deleteSeminaryAnnouncement,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryAnnouncements(queryClient),
+  });
+};
+
+export const useSeminaryCourseSchedulesQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryCourseSchedules>[0],
+) =>
+  useQuery({
+    queryKey: ["seminary", "course-schedules", params],
+    queryFn: () => seminaryApi.getSeminaryCourseSchedules(params),
+    staleTime: 30_000,
+  });
+
+const invalidateSeminaryCourseSchedules = (queryClient: ReturnType<typeof useQueryClient>) =>
+  queryClient.invalidateQueries({ queryKey: ["seminary", "course-schedules"] });
+
+export const useCreateSeminaryCourseScheduleMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryCourseSchedule,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryCourseSchedules(queryClient),
+  });
+};
+
+export const useUpdateSeminaryCourseScheduleMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryCourseSchedule,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryCourseSchedules(queryClient),
+  });
+};
+
+export const useDeleteSeminaryCourseScheduleMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.deleteSeminaryCourseSchedule,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryCourseSchedules(queryClient),
+  });
+};
+
+const invalidateSeminaryDocumentRequests = (queryClient: ReturnType<typeof useQueryClient>) =>
+  queryClient.invalidateQueries({ queryKey: ["seminary", "document-requests"] });
+
+const invalidateSeminaryDocumentRequestTypes = (queryClient: ReturnType<typeof useQueryClient>) =>
+  queryClient.invalidateQueries({ queryKey: ["seminary", "document-request-types"] });
+
+export const useSeminaryDocumentRequestTypesQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryDocumentRequestTypes>[0],
+) =>
+  useQuery({
+    queryKey: ["seminary", "document-request-types", params],
+    queryFn: () => seminaryApi.getSeminaryDocumentRequestTypes(params),
+    staleTime: 30_000,
+  });
+
+export const useSeminaryDocumentRequestsQuery = (
+  params?: Parameters<typeof seminaryApi.getSeminaryDocumentRequests>[0],
+) =>
+  useQuery({
+    queryKey: ["seminary", "document-requests", params],
+    queryFn: () => seminaryApi.getSeminaryDocumentRequests(params),
+    staleTime: 30_000,
+  });
+
+export const useCreateSeminaryDocumentRequestMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryDocumentRequest,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryDocumentRequests(queryClient),
+  });
+};
+
+export const useUpdateSeminaryDocumentRequestStatusMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryDocumentRequestStatus,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryDocumentRequests(queryClient),
+  });
+};
+
+export const useCreateSeminaryDocumentRequestTypeMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.createSeminaryDocumentRequestType,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryDocumentRequestTypes(queryClient),
+  });
+};
+
+export const useUpdateSeminaryDocumentRequestTypeMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: seminaryApi.updateSeminaryDocumentRequestType,
+    throwOnError: false,
+    onSuccess: () => invalidateSeminaryDocumentRequestTypes(queryClient),
   });
 };
 
@@ -513,10 +686,12 @@ export const useDeleteSeminaryExaminationMutation = () => {
 
 export const useSeminaryInstructorsQuery = (
   params?: Parameters<typeof seminaryApi.getSeminaryInstructors>[0],
+  options?: { enabled?: boolean },
 ) =>
   useQuery({
     queryKey: ["seminary", "instructors", params],
     queryFn: () => seminaryApi.getSeminaryInstructors(params),
+    enabled: options?.enabled ?? true,
     staleTime: 30_000,
   });
 
@@ -783,6 +958,21 @@ export const useCreateSeminaryGradeRecordMutation = () => {
       });
     },
     meta: { feature: "seminary.gradeRecord.create" },
+  });
+};
+
+export const useBulkEncodeSeminaryGradesMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: seminaryApi.bulkEncodeSeminaryGrades,
+    throwOnError: false,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["seminary", "grade-records"],
+      });
+    },
+    meta: { feature: "seminary.gradeRecord.bulkEncode" },
   });
 };
 

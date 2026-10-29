@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  BadgeCheck,
-  CreditCard,
-  MoreHorizontal,
-  ReceiptText,
-} from "lucide-react";
+import { CreditCard, MoreHorizontal, ReceiptText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,14 +14,12 @@ import type { FeeCollectionRecord } from "./fee-collection-data";
 
 type CellActionsProps = {
   data: FeeCollectionRecord;
-  onAdvanceStatus: (record: FeeCollectionRecord) => void;
   onCollectPayment: (record: FeeCollectionRecord) => void;
   onView: (record: FeeCollectionRecord) => void;
 };
 
 export const CellActions = ({
   data,
-  onAdvanceStatus,
   onCollectPayment,
   onView,
 }: CellActionsProps) => (
@@ -41,10 +34,6 @@ export const CellActions = ({
       <DropdownMenuItem onClick={() => onView(data)}>
         <ReceiptText className="size-4" />
         View account and charges
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => onAdvanceStatus(data)}>
-        <BadgeCheck className="size-4" />
-        Advance payment status
       </DropdownMenuItem>
       <DropdownMenuItem onClick={() => onCollectPayment(data)}>
         <CreditCard className="size-4" />

@@ -13,11 +13,12 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { enrollmentTrend, trendConfig } from "./data";
+import { trendConfig } from "./data";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { format, parseISO } from "date-fns";
+import type { SeminaryDashboardData } from "@/features/seminary/seminary.types";
 
-const EnrollmentOverview = () => {
+const EnrollmentOverview = ({ enrollmentTrend }: Pick<SeminaryDashboardData, "enrollmentTrend">) => {
   return (
     <Card className="border-border/70 shadow-sm">
       <CardHeader>

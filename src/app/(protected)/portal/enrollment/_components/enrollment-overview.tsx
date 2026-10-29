@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
-import { enrollmentTrend, type EnrollmentRecord } from "./enrollment-data";
+import type { EnrollmentRecord } from "./enrollment-data";
 
 const overviewConfig = {
   submitted: { label: "Submitted", color: "#82a887" },
@@ -24,7 +24,7 @@ const overviewConfig = {
 };
 
 const buildEnrollmentTrend = (records: EnrollmentRecord[]) => {
-  if (!records.length) return enrollmentTrend;
+  if (!records.length) return [];
 
   const buckets = new Map<string, { enrolled: number; submitted: number; week: string }>();
 
@@ -35,17 +35,21 @@ const buildEnrollmentTrend = (records: EnrollmentRecord[]) => {
       day: "2-digit",
       month: "short",
     }).format(date);
-    const current = buckets.get(week) ?? { week, submitted: 0, enrolled: 0 };
+    const key = date.toISOString().slice(0, 10);
+    const current = buckets.get(key) ?? { week, submitted: 0, enrolled: 0 };
 
     current.submitted += 1;
     if (record.status === "Approved" || record.status === "Enrolled") {
       current.enrolled += 1;
     }
 
-    buckets.set(week, current);
+    buckets.set(key, current);
   });
 
-  return Array.from(buckets.values()).slice(-6);
+  return Array.from(buckets.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .slice(-6)
+    .map(([, value]) => value);
 };
 
 export const EnrollmentOverview = ({

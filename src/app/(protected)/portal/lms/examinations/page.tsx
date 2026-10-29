@@ -9,7 +9,6 @@ import {
   CheckSquare,
   ClipboardCheck,
   ExternalLink,
-  Filter,
   PlayCircle,
   Plus,
 } from "lucide-react";
@@ -67,11 +66,9 @@ import {
   type ExaminationType,
 } from "./_components/columns";
 
-type AcademicYearOption = "2024-2025" | "2025-2026";
 type SubjectFilterOption = "All Subjects" | string;
 type TypeFilterOption = "All Types" | ExaminationType;
 
-const academicYearOptions: AcademicYearOption[] = ["2024-2025", "2025-2026"];
 const typeFilterOptions: TypeFilterOption[] = [
   "All Types",
   ...examinationTypeOptions,
@@ -112,8 +109,6 @@ const Page = () => {
   const router = useRouter();
   const { data: currentUser } = useCurrentUserQuery();
   const { toast } = useToast();
-  const [academicYear, setAcademicYear] =
-    useState<AcademicYearOption>("2024-2025");
   const [subjectFilter, setSubjectFilter] =
     useState<SubjectFilterOption>("All Subjects");
   const [typeFilter, setTypeFilter] = useState<TypeFilterOption>("All Types");
@@ -288,7 +283,7 @@ const Page = () => {
             Examinations
           </h1>
           <p className="text-sm text-muted-foreground">
-            Create, manage and evaluate online examinations.
+            Create, publish, and manage examinations.
           </p>
         </div>
 
@@ -339,30 +334,7 @@ const Page = () => {
 
       <Card className="border-border/70 shadow-sm">
         <CardContent className="space-y-5">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">
-                Academic Year
-              </p>
-              <Select
-                value={academicYear}
-                onValueChange={(value) =>
-                  setAcademicYear(value as AcademicYearOption)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select academic year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {academicYearOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Subject</p>
               <Select
@@ -437,18 +409,12 @@ const Page = () => {
             emptyMessage="No examinations found."
             pageSizeOptions={[7, 10, 20]}
             toolbarActions={
-              <>
-                <Button variant="outline">
-                  <Filter className="size-4" />
-                  Filters
-                </Button>
-                <Button asChild>
-                  <Link href="/portal/lms/examinations/new">
-                    <Plus className="size-4" />
-                    Create Examination
-                  </Link>
-                </Button>
-              </>
+              <Button asChild>
+                <Link href="/portal/lms/examinations/new">
+                  <Plus className="size-4" />
+                  Create Examination
+                </Link>
+              </Button>
             }
             onDeleteSelected={async (selectedRows) => {
               await Promise.all(

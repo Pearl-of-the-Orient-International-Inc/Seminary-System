@@ -42,3 +42,11 @@ export async function logout() {
     authStore.clear();
   }
 }
+
+export async function changePassword(payload: {
+  oldPassword: string;
+  password: string;
+  confirmPassword: string;
+}) {
+  await api.post("/auth/change-password", payload);
+}

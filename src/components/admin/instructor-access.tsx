@@ -24,7 +24,9 @@ export const isInstructorAllowedPath = (pathname: string) =>
   );
 
 const getLoginPath = (pathname: string) =>
-  pathname.startsWith("/portal") ? "/auth/access" : "/auth/registrar";
+  pathname.startsWith("/students") || pathname.startsWith("/portal")
+    ? "/auth/access"
+    : "/auth/registrar";
 
 export const ProtectedAccessGuard = ({
   children,
@@ -55,6 +57,9 @@ export const ProtectedAccessGuard = ({
     ) {
       router.replace("/portal/dashboard");
     }
+    if (currentUser.role === "MEMBER" && !pathname.startsWith("/students")) {
+      router.replace("/students/dashboard");
+    }
   }, [currentUser, isError, isLoading, pathname, router]);
 
   if (
@@ -62,7 +67,8 @@ export const ProtectedAccessGuard = ({
     isError ||
     !currentUser ||
     currentUser?.role === "INSTRUCTOR" &&
-      !isInstructorAllowedPath(pathname)
+      !isInstructorAllowedPath(pathname) ||
+    currentUser?.role === "MEMBER" && !pathname.startsWith("/students")
   ) {
     return null;
   }

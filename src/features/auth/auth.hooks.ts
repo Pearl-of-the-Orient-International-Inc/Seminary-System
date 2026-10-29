@@ -38,4 +38,11 @@ export const useCurrentUserQuery = () =>
     staleTime: 60_000,
   });
 
+export const useChangePasswordMutation = () =>
+  useMutation({
+    mutationFn: authApi.changePassword,
+    throwOnError: false,
+    meta: { feature: "auth.password.change" },
+  });
+
 export { toApiError };

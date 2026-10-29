@@ -48,7 +48,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useCurrentUserQuery } from "@/features/auth/auth.hooks";
 import {
   toApiError,
   useCreateSeminaryGradeRecordMutation,
@@ -70,7 +69,7 @@ import { useToast } from "@/hooks/use-toast";
 
 type Step = 0 | 1 | 2;
 type EntryMode = "single" | "bulk";
-type GradeComponent = "attendance" | "coursework" | "exam";
+type GradeComponent = "attendance" | "coursework" | "character" | "exam";
 
 type SubjectOption = {
   courseCode: string;
@@ -82,6 +81,7 @@ type SubjectOption = {
 type StudentGradeRow = {
   attendance: string;
   coursework: string;
+  character: string;
   exam: string;
   finalGrade: string;
   notes: string;
@@ -94,8 +94,9 @@ type StudentGradeRow = {
 
 const defaultWeights = {
   attendance: 20,
-  coursework: 40,
-  exam: 40,
+  coursework: 25,
+  character: 30,
+  exam: 25,
 } satisfies SeminaryGradeCriteriaWeights;
 
 const statusOptions: Array<{
@@ -213,10 +214,10 @@ const Page = () => {
   const [batchScores, setBatchScores] = useState<Record<GradeComponent, string>>({
     attendance: "",
     coursework: "",
+    character: "",
     exam: "",
   });
 
-  const { data: currentUser } = useCurrentUserQuery();
   const coursesQuery = useSeminaryCoursesQuery({ limit: 100, page: 1 });
   const studentsQuery = useSeminaryStudentsQuery({ limit: 200, page: 1 });
   const configurationQuery = useSeminaryGradeConfigurationQuery();
@@ -229,13 +230,10 @@ const Page = () => {
   });
   const createMutation = useCreateSeminaryGradeRecordMutation();
   const updateMutation = useUpdateSeminaryGradeRecordMutation();
-  const currentName = currentUser?.name ?? "";
   const configuration = configurationQuery.data?.data;
   const weights = configuration?.criteriaWeights ?? defaultWeights;
 
   const subjectOptions = useMemo<SubjectOption[]>(() => {
-    const isInstructor = currentUser?.role === "INSTRUCTOR";
-
     return (coursesQuery.data?.data ?? [])
       .flatMap((course) =>
         (course.subjects ?? []).map((courseSubject) => ({
@@ -246,13 +244,8 @@ const Page = () => {
           program: normalizeProgram(course.program),
         })),
       )
-      .filter(
-        (option) =>
-          !isInstructor ||
-          option.professor.toLowerCase() === currentName.toLowerCase(),
-      )
       .sort((first, second) => first.name.localeCompare(second.name));
-  }, [coursesQuery.data?.data, currentName, currentUser?.role]);
+  }, [coursesQuery.data?.data]);
 
   const selectedSubject = subjectOptions.find((option) => option.name === subject);
 
@@ -296,6 +289,7 @@ const Page = () => {
       {
         attendance: "",
         coursework: "",
+        character: "",
         exam: "",
         finalGrade: record.finalGrade,
         notes: record.notes ?? "",
@@ -319,6 +313,7 @@ const Page = () => {
       return studentOptions.map((student, index) => ({
         attendance: currentById.get(student.id)?.attendance ?? "",
         coursework: currentById.get(student.id)?.coursework ?? "",
+        character: currentById.get(student.id)?.character ?? "",
         exam: currentById.get(student.id)?.exam ?? "",
         finalGrade: currentById.get(student.id)?.finalGrade ?? "",
         notes: currentById.get(student.id)?.notes ?? "",
@@ -350,6 +345,7 @@ const Page = () => {
     const percentage =
       (numberOrZero(row.attendance) * weights.attendance +
         numberOrZero(row.coursework) * weights.coursework +
+        numberOrZero(row.character) * weights.character +
         numberOrZero(row.exam) * weights.exam) /
       100;
     const finalGrade = equivalentFromPercentage(
@@ -596,8 +592,9 @@ const Page = () => {
                 </div>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   Profile: {configuration?.weightProfile ?? "Standard Coursework"}.
-                  Weights: Attendance {weights.attendance}%, Coursework{" "}
-                  {weights.coursework}%, Exam {weights.exam}%. Passing equivalent:{" "}
+                  Weights: Attendance {weights.attendance}%, Reports &amp; Activities{" "}
+                  {weights.coursework}%, Character {weights.character}%, Examinations{" "}
+                  {weights.exam}%. Passing equivalent:{" "}
                   {configuration?.passingEquivalent ?? "2.50"}.
                 </p>
               </div>
@@ -640,11 +637,11 @@ const Page = () => {
                       students. Empty fields will not replace existing values.
                     </p>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[9rem_9rem_9rem_auto] lg:items-end">
-                    {(["attendance", "coursework", "exam"] as const).map(
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[9rem_9rem_9rem_9rem_auto] lg:items-end">
+                    {(["attendance", "coursework", "character", "exam"] as const).map(
                       (field) => (
                         <Field key={field}>
-                          <FieldLabel className="capitalize">{field}</FieldLabel>
+                          <FieldLabel>{field === "coursework" ? "Reports & Activities" : field === "exam" ? "Examinations" : field[0].toUpperCase() + field.slice(1)}</FieldLabel>
                           <Input
                             className="w-full"
                             min={0}
@@ -686,13 +683,18 @@ const Page = () => {
                         </GradeHeader>
                       </TableHead>
                       <TableHead>
-                        <GradeHeader description="Enter quizzes, activities, participation, or class work score as a percentage from 0 to 100. This uses the Coursework weight.">
-                          Coursework
+                        <GradeHeader description="Enter reports and activities as a percentage from 0 to 100. This uses the Reports & Activities weight.">
+                          Reports &amp; Activities
                         </GradeHeader>
                       </TableHead>
                       <TableHead>
-                        <GradeHeader description="Enter examination score as a percentage from 0 to 100. This uses the Exam weight.">
-                          Exam
+                        <GradeHeader description="Enter character assessment as a percentage from 0 to 100. This uses the Character weight.">
+                          Character
+                        </GradeHeader>
+                      </TableHead>
+                      <TableHead>
+                        <GradeHeader description="Enter examination score as a percentage from 0 to 100. This uses the Examinations weight.">
+                          Examinations
                         </GradeHeader>
                       </TableHead>
                       <TableHead>
@@ -740,7 +742,7 @@ const Page = () => {
                             </div>
                           </div>
                         </TableCell>
-                        {(["attendance", "coursework", "exam"] as const).map((field) => (
+                        {(["attendance", "coursework", "character", "exam"] as const).map((field) => (
                           <TableCell key={field}>
                             <Input
                               className="w-24"

@@ -66,7 +66,11 @@ export const HeaderToolbar = () => {
 
   const handleLogout = async () => {
     const redirectPath =
-      currentUser?.role === "INSTRUCTOR" ? "/auth/instructor" : "/auth/registrar";
+      currentUser?.role === "INSTRUCTOR"
+        ? "/auth/instructor"
+        : currentUser?.role === "MEMBER"
+          ? "/auth/access"
+          : "/auth/registrar";
 
     await logoutMutation.mutateAsync();
     router.replace(redirectPath);
@@ -81,8 +85,8 @@ export const HeaderToolbar = () => {
           <IconSearch className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#66756a] dark:text-[#93a295]" />
           <Input
             type="search"
-            placeholder="Search accounts"
-            aria-label="Search accounts"
+            placeholder={currentUser?.role === "MEMBER" ? "Search your portal" : "Search accounts"}
+            aria-label={currentUser?.role === "MEMBER" ? "Search your portal" : "Search accounts"}
             className="h-10 rounded-xl border-0 bg-[#efefea] pl-11 text-sm shadow-none placeholder:text-[#8a9186] focus-visible:ring-0 dark:bg-[#223129] dark:text-[#edf4ed] dark:placeholder:text-[#9aa89b]"
           />
         </div>

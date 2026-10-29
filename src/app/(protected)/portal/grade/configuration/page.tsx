@@ -135,7 +135,11 @@ const Page = () => {
     if (serializedPayload === lastSavedPayloadRef.current) return;
     if (
       weights &&
-      weights.attendance + weights.coursework + weights.exam !== 100
+      weights.attendance +
+        weights.coursework +
+        weights.character +
+        weights.exam !==
+        100
     ) {
       return;
     }
@@ -198,6 +202,11 @@ const Page = () => {
   const weightProfile = configuration.weightProfile ?? "Standard Coursework";
   const criteriaWeights =
     configuration.criteriaWeights ?? defaultCriteriaWeights;
+  const criteriaTotal =
+    criteriaWeights.attendance +
+    criteriaWeights.coursework +
+    criteriaWeights.character +
+    criteriaWeights.exam;
   const saveStatus = updateConfigurationMutation.isPending
     ? "Saving..."
     : lastSavedAt
@@ -363,7 +372,7 @@ const Page = () => {
             </div>
 
             <div className="space-y-4 rounded-2xl border border-emerald-950/10 bg-emerald-950/3 p-5 dark:border-emerald-100/10 dark:bg-emerald-100/4">
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h3 className="font-semibold text-emerald-950 dark:text-emerald-50">
                     Criteria Weights
@@ -372,11 +381,20 @@ const Page = () => {
                     These percentages compute grade equivalents in grade records.
                   </p>
                 </div>
+                <div
+                  className={`rounded-full px-3 py-1 text-xs font-semibold tabular-nums ${
+                    criteriaTotal === 100
+                      ? "bg-emerald-700/10 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200"
+                      : "bg-destructive/10 text-destructive"
+                  }`}
+                >
+                  Total: {criteriaTotal}%
+                </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field>
-                  <FieldLabel>Attendance %</FieldLabel>
+                  <FieldLabel className="min-h-5">Attendance (%)</FieldLabel>
                   <Input
                     type="number"
                     min={0}
@@ -388,7 +406,7 @@ const Page = () => {
                   />
                 </Field>
                 <Field>
-                  <FieldLabel>Coursework %</FieldLabel>
+                  <FieldLabel className="min-h-5">Reports &amp; Activities (%)</FieldLabel>
                   <Input
                     type="number"
                     min={0}
@@ -400,7 +418,19 @@ const Page = () => {
                   />
                 </Field>
                 <Field>
-                  <FieldLabel>Exam %</FieldLabel>
+                  <FieldLabel className="min-h-5">Character (%)</FieldLabel>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={criteriaWeights.character}
+                    onChange={(event) =>
+                      updateCriteriaWeight("character", event.target.value)
+                    }
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel className="min-h-5">Examinations (%)</FieldLabel>
                   <Input
                     type="number"
                     min={0}

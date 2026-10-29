@@ -37,17 +37,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
+  toApiError,
   useSeminaryFeeConfigurationQuery,
   useSeminaryFeeCollectionsQuery,
   useUpdateSeminaryFeeCollectionPaymentMutation,
-  useUpdateSeminaryFeeCollectionStatusMutation,
   useUpdateSeminaryFeeConfigurationMutation,
 } from "@/features/seminary/seminary.hooks";
 import { useToast } from "@/hooks/use-toast";
-import type {
-  SeminaryFeeCollectionAccount,
-  SeminaryFeeCollectionStatus,
-} from "@/features/seminary/seminary.types";
+import type { SeminaryFeeCollectionAccount } from "@/features/seminary/seminary.types";
 
 import { StatCard } from "../academics/classes/_components/stat-card";
 import { CellActions } from "./_components/cell-actions";
@@ -67,15 +64,7 @@ import {
 type StatusFilter = "ALL" | CollectionStatus;
 type ProgramFilter = "ALL" | CollectionProgram;
 
-const statusFlow: CollectionStatus[] = ["Pending", "Partially Paid", "Paid"];
 const paymentMethodOptions = ["Cash", "GCash", "Bank Transfer", "Installment"];
-
-const statusApiMap: Record<CollectionStatus, SeminaryFeeCollectionStatus> = {
-  Overdue: "OVERDUE",
-  Paid: "PAID",
-  "Partially Paid": "PARTIALLY_PAID",
-  Pending: "PENDING",
-};
 
 const toFeeCollectionRecord = (
   account: SeminaryFeeCollectionAccount,
@@ -120,7 +109,6 @@ const Page = () => {
     amountPaid: 0,
     dueDate: "",
     paymentMethod: "Cash",
-    status: "Pending" as CollectionStatus,
   });
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
@@ -130,8 +118,6 @@ const Page = () => {
     useUpdateSeminaryFeeConfigurationMutation();
   const updateFeeCollectionPaymentMutation =
     useUpdateSeminaryFeeCollectionPaymentMutation();
-  const updateFeeCollectionStatusMutation =
-    useUpdateSeminaryFeeCollectionStatusMutation();
   const { toast } = useToast();
   const feeBreakdowns =
     feeConfigurationQuery.data?.data?.feeBreakdowns ?? feeBreakdownsByProgram;
@@ -140,21 +126,7 @@ const Page = () => {
     [feeCollectionsQuery.data],
   );
 
-  const recordsWithFees = useMemo(
-    () =>
-      records.map((record) => {
-        const totalCharges = getBreakdownTotal(
-          feeBreakdowns[record.programLevel],
-        );
-
-        return {
-          ...record,
-          balance: Math.max(totalCharges - record.amountPaid, 0),
-          totalCharges,
-        };
-      }),
-    [feeBreakdowns, records],
-  );
+  const recordsWithFees = records;
 
   const filteredRecords = useMemo(() => {
     return recordsWithFees.filter((record) => {
@@ -202,50 +174,8 @@ const Page = () => {
       amountPaid: record.amountPaid,
       dueDate: record.dueDate,
       paymentMethod: record.paymentMethod,
-      status: record.status,
     });
     setPaymentSheetOpen(true);
-  };
-
-  const handleAdvanceStatus = (target: FeeCollectionRecord) => {
-    if (!target.id) {
-      toast({
-        title: "Status update unavailable",
-        description: "This account has no backend ID.",
-        variant: "error",
-      });
-      return;
-    }
-
-    const currentStatus = target.status === "Overdue" ? "Pending" : target.status;
-    const currentIndex = statusFlow.indexOf(currentStatus);
-    const nextStatus =
-      currentIndex >= 0 && currentIndex < statusFlow.length - 1
-        ? statusFlow[currentIndex + 1]
-        : statusFlow[statusFlow.length - 1];
-
-    updateFeeCollectionStatusMutation.mutate(
-      { id: target.id, status: statusApiMap[nextStatus] },
-      {
-        onError: (error) => {
-          toast({
-            title: "Status update failed",
-            description:
-              error instanceof Error
-                ? error.message
-                : "Unable to update fee collection status.",
-            variant: "error",
-          });
-        },
-        onSuccess: () => {
-          toast({
-            variant: "success",
-            title: "Payment status updated",
-            description: `${target.studentName} was set to ${nextStatus.toLowerCase()}.`,
-          });
-        },
-      },
-    );
   };
 
   const handleFeeAmountChange = (
@@ -304,12 +234,11 @@ const Page = () => {
         description: "Payment fee configuration was updated.",
       });
     } catch (error) {
+      const apiError = toApiError(error);
       toast({
         title: "Save failed",
         description:
-          error instanceof Error
-            ? error.message
-            : "Unable to update payment fee configuration.",
+          apiError.message ?? "Unable to update payment fee configuration.",
         variant: "error",
       });
     }
@@ -331,7 +260,6 @@ const Page = () => {
           amountPaid: paymentDraft.amountPaid,
           dueDate: paymentDraft.dueDate,
           paymentMethod: paymentDraft.paymentMethod,
-          status: statusApiMap[paymentDraft.status],
         },
       });
       setPaymentSheetOpen(false);
@@ -342,12 +270,11 @@ const Page = () => {
         description: `${paymentRecord.studentName} payment record was updated.`,
       });
     } catch (error) {
+      const apiError = toApiError(error);
       toast({
         title: "Payment update failed",
         description:
-          error instanceof Error
-            ? error.message
-            : "Unable to update payment collection.",
+          apiError.message ?? "Unable to update payment collection.",
         variant: "error",
       });
     }
@@ -357,7 +284,6 @@ const Page = () => {
     <CellActions
       data={row.original}
       onView={openAccountDetails}
-      onAdvanceStatus={handleAdvanceStatus}
       onCollectPayment={openPaymentSheet}
     />
   );
@@ -748,29 +674,10 @@ const Page = () => {
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="payment-status">Status</Label>
-              <Select
-                value={paymentDraft.status}
-                onValueChange={(value) =>
-                  setPaymentDraft((current) => ({
-                    ...current,
-                    status: value as CollectionStatus,
-                  }))
-                }
-              >
-                <SelectTrigger className="w-full" id="payment-status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {collectionStatusOptions.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              Payment status is calculated automatically from the recorded amount
+              and remaining balance.
+            </p>
           </div>
 
           <SheetFooter className="border-t">

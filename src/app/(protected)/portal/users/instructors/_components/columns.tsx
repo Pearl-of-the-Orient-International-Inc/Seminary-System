@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 import type {
@@ -62,6 +62,13 @@ export const columns: ColumnDef<InstructorRecord>[] = [
       return (
         <div className="flex min-w-50 items-center gap-3">
           <Avatar size="lg" className="ring-2 ring-emerald-950/8">
+            {record.formalPhotoUrl ? (
+              <AvatarImage
+                src={record.formalPhotoUrl}
+                alt={`${record.name} profile photo`}
+                className="object-cover"
+              />
+            ) : null}
             <AvatarFallback className="bg-emerald-900/10 font-semibold text-emerald-900 dark:bg-emerald-100/10 dark:text-emerald-100">
               {getInitials(record.name)}
             </AvatarFallback>

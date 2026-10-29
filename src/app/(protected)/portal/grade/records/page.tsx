@@ -48,6 +48,7 @@ import { StatCard } from "../../academics/classes/_components/stat-card";
 import { CellActions } from "./_components/cell-actions";
 import { columns } from "./_components/columns";
 import { GradeRecordDetailsDialog } from "./_components/grade-record-details-dialog";
+import { GradeEncodingWorkspace } from "./_components/grade-encoding-workspace";
 import {
   gradeProgramOptions,
   gradeStatusOptions,
@@ -215,8 +216,8 @@ const Page = () => {
               Grade Records
             </h1>
             <p className="text-sm leading-6 text-muted-foreground">
-              Encode grades for students in subjects assigned to current
-              instructor.
+              Encode raw points, review computed equivalents, and manage
+              student grade records from one workspace.
             </p>
           </div>
 
@@ -269,6 +270,8 @@ const Page = () => {
             accentClassName="bg-violet-500/10 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300"
           />
         </div>
+
+        <GradeEncodingWorkspace />
 
         <Card className="overflow-hidden pt-0! border-emerald-950/10 shadow-sm dark:border-emerald-100/10">
           <div className="border-b border-emerald-950/10 bg-linear-to-r from-emerald-950 to-emerald-900 px-6 py-5 dark:border-emerald-100/10">

@@ -135,11 +135,11 @@ export const columns: ColumnDef<StudyMaterialRecord>[] = [
   },
   {
     accessorKey: "className",
-    header: ({ column }) => <SortableHeader column={column} label="Class" />,
+    header: ({ column }) => <SortableHeader column={column} label="File" />,
     cell: ({ row }) => <div className="max-w-52">
-      <p className="truncate">{row.original.className}</p>
+      <p className="truncate">{row.original.fileName ?? row.original.className}</p>
       <p className="truncate text-xs text-muted-foreground">
-          Topic: {row.original.topic}
+          {row.original.subtitle || "No description"}
         </p>
     </div>,
   },

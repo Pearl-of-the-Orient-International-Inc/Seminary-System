@@ -8,9 +8,7 @@ import {
   AlertCircle,
   BookOpenText,
   CloudUpload,
-  Download,
   FileClock,
-  Filter,
   FileUp,
   Plus,
   ScrollText,
@@ -74,31 +72,15 @@ import { useToast } from "@/hooks/use-toast";
 import { CellActions } from "./_components/cell-actions";
 import {
   columns,
-  studyMaterialClassOptions,
   studyMaterialStatusOptions,
-  studyMaterialTopicOptions,
   studyMaterialTypeOptions,
-  type StudyMaterialClass,
   type StudyMaterialRecord,
-  type StudyMaterialTopic,
   type StudyMaterialType,
 } from "./_components/columns";
 
-type AcademicYearOption = "2024-2025" | "2025-2026";
-type ClassFilterOption = "All Classes" | StudyMaterialClass;
 type SubjectFilterOption = "All Subjects" | string;
-type TopicFilterOption = "All Topics" | StudyMaterialTopic;
 type TypeFilterOption = "All Types" | StudyMaterialType;
 
-const academicYearOptions: AcademicYearOption[] = ["2024-2025", "2025-2026"];
-const classFilterOptions: ClassFilterOption[] = [
-  "All Classes",
-  ...studyMaterialClassOptions,
-];
-const topicFilterOptions: TopicFilterOption[] = [
-  "All Topics",
-  ...studyMaterialTopicOptions,
-];
 const typeFilterOptions: TypeFilterOption[] = [
   "All Types",
   ...studyMaterialTypeOptions,
@@ -197,11 +179,8 @@ const Page = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: currentUser } = useCurrentUserQuery();
   const { toast } = useToast();
-  const [academicYear, setAcademicYear] = useState<AcademicYearOption>("2024-2025");
-  const [classFilter, setClassFilter] = useState<ClassFilterOption>("All Classes");
   const [subjectFilter, setSubjectFilter] =
     useState<SubjectFilterOption>("All Subjects");
-  const [topicFilter, setTopicFilter] = useState<TopicFilterOption>("All Topics");
   const [typeFilter, setTypeFilter] = useState<TypeFilterOption>("All Types");
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
   const [previewRecord, setPreviewRecord] = useState<StudyMaterialRecord | null>(
@@ -256,10 +235,6 @@ const Page = () => {
     const draftCount = materials.filter(
       (material) => material.status === "Draft",
     ).length;
-    const totalDownloads = materials.reduce(
-      (sum, material) => sum + material.downloads,
-      0,
-    );
     const publishedPercent =
       materials.length > 0
         ? `${((publishedCount / materials.length) * 100).toFixed(2)}% of total`
@@ -290,32 +265,19 @@ const Page = () => {
         accentClassName:
           "bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300",
       },
-      {
-        title: "Total Downloads",
-        value: totalDownloads.toLocaleString(),
-        description: "Across all materials",
-        icon: <Download className="size-6" />,
-        accentClassName:
-          "bg-violet-500/10 text-violet-700 dark:bg-violet-400/10 dark:text-violet-300",
-      },
     ];
   }, [materials]);
 
   const filteredMaterials = useMemo(
     () =>
       materials.filter((material) => {
-        const classMatch =
-          classFilter === "All Classes" ||
-          material.className.startsWith(classFilter);
         const subjectMatch =
           subjectFilter === "All Subjects" || material.subject === subjectFilter;
-        const topicMatch =
-          topicFilter === "All Topics" || material.topic === topicFilter;
         const typeMatch = typeFilter === "All Types" || material.type === typeFilter;
 
-        return classMatch && subjectMatch && topicMatch && typeMatch;
+        return subjectMatch && typeMatch;
       }),
-    [classFilter, materials, subjectFilter, topicFilter, typeFilter],
+    [materials, subjectFilter, typeFilter],
   );
 
   const handleDelete = async (targetRecord: StudyMaterialRecord) => {
@@ -496,7 +458,7 @@ const Page = () => {
         </Breadcrumb>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {stats.map((stat) => (
           <Card
             key={stat.title}
@@ -522,45 +484,7 @@ const Page = () => {
 
       <Card className="border-border/70 shadow-sm">
         <CardContent className="space-y-5">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Academic Year</p>
-              <Select
-                value={academicYear}
-                onValueChange={(value) => setAcademicYear(value as AcademicYearOption)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select academic year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {academicYearOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Class</p>
-              <Select
-                value={classFilter}
-                onValueChange={(value) => setClassFilter(value as ClassFilterOption)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select class" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classFilterOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
+          <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Subject</p>
               <Select
@@ -574,25 +498,6 @@ const Page = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {subjectFilterOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Topic</p>
-              <Select
-                value={topicFilter}
-                onValueChange={(value) => setTopicFilter(value as TopicFilterOption)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select topic" />
-                </SelectTrigger>
-                <SelectContent>
-                  {topicFilterOptions.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
                     </SelectItem>
@@ -634,26 +539,20 @@ const Page = () => {
             }
             pageSizeOptions={[7, 10, 20]}
             toolbarActions={
-              <>
-                <Button variant="outline">
-                  <Filter className="size-4" />
-                  Filters
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setEditingRecord(null);
-                    setMaterialForm((current) => ({
-                      ...defaultMaterialForm,
-                      subject: current.subject || subjectOptions[0] || "",
-                    }));
-                    setUploadSheetOpen(true);
-                  }}
-                >
-                  <Plus className="size-4" />
-                  Upload Material
-                </Button>
-              </>
+              <Button
+                type="button"
+                onClick={() => {
+                  setEditingRecord(null);
+                  setMaterialForm((current) => ({
+                    ...defaultMaterialForm,
+                    subject: current.subject || subjectOptions[0] || "",
+                  }));
+                  setUploadSheetOpen(true);
+                }}
+              >
+                <Plus className="size-4" />
+                Upload Material
+              </Button>
             }
             onDeleteSelected={async (selectedRows) => {
               await Promise.all(

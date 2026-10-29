@@ -38,7 +38,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  toApiError,
   useBulkDeleteSeminaryStudentsMutation,
+  useChangeSeminaryStudentPasswordMutation,
   useDeleteSeminaryStudentMutation,
   useSeminaryStudentsQuery,
   useUpdateSeminaryStudentMutation,
@@ -63,6 +65,7 @@ import {
   type StudentStatus,
 } from "./_components/student-data";
 import { StudentQrCodeDialog } from "./_components/student-qr-code-dialog";
+import { ChangeStudentPasswordDialog } from "./_components/change-student-password-dialog";
 
 type StatusFilter = "ALL" | StudentStatus;
 type ProgramLevelFilter = "ALL" | ProgramLevel;
@@ -169,6 +172,8 @@ const Page = () => {
     useState<StudentRecord | null>(null);
   const [studentPendingStatusChange, setStudentPendingStatusChange] =
     useState<StudentRecord | null>(null);
+  const [studentPendingPasswordChange, setStudentPendingPasswordChange] =
+    useState<StudentRecord | null>(null);
   const [qrCodeOpen, setQrCodeOpen] = useState(false);
   const [batchAssetMode, setBatchAssetMode] = useState<BatchAssetMode | null>(
     null,
@@ -181,6 +186,7 @@ const Page = () => {
   const updateStudentMutation = useUpdateSeminaryStudentMutation();
   const deleteStudentMutation = useDeleteSeminaryStudentMutation();
   const bulkDeleteStudentsMutation = useBulkDeleteSeminaryStudentsMutation();
+  const changePasswordMutation = useChangeSeminaryStudentPasswordMutation();
 
   const students = useMemo(
     () => studentsQuery.data?.data?.map(toStudentRecord) ?? [],
@@ -280,6 +286,32 @@ const Page = () => {
     setStudentPendingDelete(student);
   };
 
+  const handleChangePassword = async (
+    password: string,
+    confirmPassword: string,
+  ) => {
+    const student = studentPendingPasswordChange;
+    const studentId = student?.application?.studentId;
+    if (!studentId) return;
+
+    if (password !== confirmPassword) {
+      toast({ title: "Passwords do not match", description: "Enter the same new password in both fields.", variant: "error" });
+      return;
+    }
+
+    try {
+      await changePasswordMutation.mutateAsync({ studentId, password, confirmPassword });
+      toast({ title: "Password changed", description: `A new password was saved for ${student.name}.`, variant: "success" });
+      setStudentPendingPasswordChange(null);
+    } catch (error) {
+      toast({
+        title: "Password change failed",
+        description: toApiError(error).message,
+        variant: "error",
+      });
+    }
+  };
+
   const handleDeleteStudent = async () => {
     if (!studentPendingDelete?.application?.studentId) {
       return;
@@ -369,6 +401,7 @@ const Page = () => {
       onGenerateBarcode={openBarcodeDialog}
       onGenerateQrCode={openQrCodeDialog}
       onToggleStatus={handleToggleStatus}
+      onChangePassword={setStudentPendingPasswordChange}
     />
   );
 
@@ -610,6 +643,14 @@ const Page = () => {
           </CardContent>
         </Card>
       </section>
+      <ChangeStudentPasswordDialog
+        key={studentPendingPasswordChange?.id ?? "closed"}
+        open={Boolean(studentPendingPasswordChange)}
+        student={studentPendingPasswordChange}
+        isPending={changePasswordMutation.isPending}
+        onOpenChange={(open) => !open && setStudentPendingPasswordChange(null)}
+        onSubmit={handleChangePassword}
+      />
 
       <BulkImportDialog
         open={bulkImportOpen}

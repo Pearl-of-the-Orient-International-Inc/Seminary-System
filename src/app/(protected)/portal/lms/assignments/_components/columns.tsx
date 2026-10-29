@@ -5,7 +5,6 @@ import { ArrowUpDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 
 export const assignmentStatusOptions = [
   "Published",
@@ -84,11 +83,6 @@ const toPlainText = (value: string) => {
   return document.body.textContent?.replace(/\s+/g, " ").trim() ?? "";
 };
 
-const toProgressValue = (value: string) => {
-  const parsed = Number(value.replace("%", ""));
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
 export const columns: ColumnDef<AssignmentRecord>[] = [
   {
     accessorKey: "order",
@@ -142,23 +136,6 @@ export const columns: ColumnDef<AssignmentRecord>[] = [
       <Badge variant={statusVariant[row.original.status]}>
         {row.original.status}
       </Badge>
-    ),
-  },
-  {
-    accessorKey: "submittedText",
-    header: "Submitted",
-    cell: ({ row }) => (
-      <div className="min-w-24 space-y-2">
-        <div className="flex items-center justify-between gap-3">
-          <p className="font-medium text-slate-900">
-            {row.original.submittedText}
-          </p>
-          <p className="text-xs text-slate-500">
-            {row.original.submissionRate}
-          </p>
-        </div>
-        <Progress value={toProgressValue(row.original.submissionRate)} />
-      </div>
     ),
   },
 ];

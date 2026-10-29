@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   QrCode,
   UserCheck,
+  KeyRound,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ type CellActionsProps = {
   onGenerateQrCode: (record: StudentRecord) => void;
   onDelete: (record: StudentRecord) => void;
   onToggleStatus: (record: StudentRecord) => void;
+  onChangePassword: (record: StudentRecord) => void;
 };
 
 export const CellActions = ({
@@ -35,6 +37,7 @@ export const CellActions = ({
   onGenerateBarcode,
   onGenerateQrCode,
   onToggleStatus,
+  onChangePassword,
 }: CellActionsProps) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
@@ -53,6 +56,10 @@ export const CellActions = ({
       <DropdownMenuItem onClick={() => onToggleStatus(data)}>
         <UserCheck className="size-4" />
         {data.status === "Active" ? "Set inactive" : "Set active"}
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={() => onChangePassword(data)}>
+        <KeyRound className="size-4" />
+        Change password
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem onClick={() => onGenerateBarcode(data)}>

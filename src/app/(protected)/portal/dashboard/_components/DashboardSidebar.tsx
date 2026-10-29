@@ -3,6 +3,7 @@
 import { format, parseISO } from "date-fns";
 import { IconCalendarEvent } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -10,11 +11,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { EventRecord } from "./data";
+import type { SeminaryDashboardData } from "@/features/seminary/seminary.types";
 import { Badge } from "@/components/ui/badge";
 
 type DashboardSidebarProps = {
-  events: EventRecord[];
+  events: SeminaryDashboardData["events"];
 };
 
 export const DashboardSidebar = ({ events }: DashboardSidebarProps) => {
@@ -30,7 +31,7 @@ export const DashboardSidebar = ({ events }: DashboardSidebarProps) => {
         {events.length ? (
           events.map((event) => (
             <div
-              key={`${event.date}-${event.title}`}
+              key={event.id}
               className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-4 shadow-[0_8px_24px_rgba(16,24,18,0.05)] dark:bg-[#18231c]"
             >
               <div className="absolute inset-y-5 left-7 w-px bg-[linear-gradient(to_bottom,rgba(31,106,57,0.2),rgba(31,106,57,0))] dark:bg-[linear-gradient(to_bottom,rgba(207,226,209,0.22),rgba(207,226,209,0))]" />
@@ -38,10 +39,10 @@ export const DashboardSidebar = ({ events }: DashboardSidebarProps) => {
               <div className="relative flex items-start gap-4">
                 <div className="flex min-w-14 flex-col items-center rounded-xl border border-[#d7e4d7] bg-[linear-gradient(180deg,#ffffff_0%,#edf4ec_100%)] px-2 py-3 text-[#1e2c22] shadow-sm dark:border-[#33503b] dark:bg-[linear-gradient(180deg,#24342a_0%,#1d2a22_100%)] dark:text-[#edf4ed]">
                   <span className="text-xl leading-none">
-                    {format(parseISO(event.date), "dd")}
+                  {format(parseISO(event.startsAt), "dd")}
                   </span>
                   <span className="mt-1 text-[11px] uppercase text-[#58705d] dark:text-[#a9bcac]">
-                    {format(parseISO(event.date), "MMM")}
+                    {format(parseISO(event.startsAt), "MMM")}
                   </span>
                 </div>
 
@@ -52,15 +53,15 @@ export const DashboardSidebar = ({ events }: DashboardSidebarProps) => {
                         {event.title}
                       </p>
                       <p className="text-xs uppercase text-muted-foreground">
-                        {format(parseISO(event.date), "EEEE")}
+                        {format(parseISO(event.startsAt), "EEEE")}
                       </p>
                     </div>
 
-                    <Badge>{event.tag}</Badge>
+                    <Badge>{event.category.toLowerCase()}</Badge>
                   </div>
 
                   <div className="text-sm text-muted-foreground">
-                    {event.time} - {event.location}
+                    {event.allDay ? "All day" : format(parseISO(event.startsAt), "h:mm a")}{event.location ? ` · ${event.location}` : ""}
                   </div>
                 </div>
               </div>
@@ -79,8 +80,10 @@ export const DashboardSidebar = ({ events }: DashboardSidebarProps) => {
         )}
 
         {events.length ? (
-          <Button variant="outline" className="w-full rounded-2xl">
+          <Button variant="outline" className="w-full rounded-2xl" asChild>
+            <Link href="/portal/announcement">
             View Full Calendar
+            </Link>
           </Button>
         ) : null}
       </CardContent>

@@ -1,11 +1,7 @@
-import React from 'react'
+import { StudentPortalPage } from "../_components/student-portal-page";
 
 const Page = () => {
-  return (
-    <div>
-      Student Dashboard
-    </div>
-  )
+  return <StudentPortalPage view="dashboard" />;
 }
 
 export default Page

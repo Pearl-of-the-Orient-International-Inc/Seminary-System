@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   toApiError,
   useCreateSeminaryStudentMutation,
+  useSeminaryCoursesQuery,
   useSeminaryStudentQuery,
   useUpdateSeminaryStudentMutation,
 } from "@/features/seminary/seminary.hooks";
@@ -42,7 +43,7 @@ import {
   academicYearOptions,
   type ProgramLevel,
 } from "../../_components/student-data";
-import { getProgramsByLevel, programLevelOptions } from "./program-options";
+import { programLevelOptions } from "./program-options";
 
 type StudentFormMode = "create" | "update";
 type Requirement = "required" | "optional";
@@ -159,6 +160,13 @@ const programLevelLabelMap: Record<string, ProgramLevel> = {
   BACHELOR: "Bachelor",
   MASTER_WITH_THESIS: "Masteral",
   DOCTORATE_WITH_DISSERTATION: "Doctorate",
+};
+
+const programLevelApiMap: Record<ProgramLevel, string> = {
+  Certificate: "CERTIFICATE",
+  Bachelor: "BACHELOR",
+  Masteral: "MASTER_WITH_THESIS",
+  Doctorate: "DOCTORATE_WITH_DISSERTATION",
 };
 
 const enrollmentTypeLabelMap: Record<string, string> = {
@@ -375,6 +383,7 @@ export const StudentForm = ({ mode, studentId }: StudentFormProps) => {
   });
   const createStudentMutation = useCreateSeminaryStudentMutation();
   const updateStudentMutation = useUpdateSeminaryStudentMutation();
+  const coursesQuery = useSeminaryCoursesQuery({ status: "ACTIVE" });
   const serverStudent = studentQuery.data?.data;
   const defaultValues = useMemo(
     () => createDefaultValues(mode, studentId, serverStudent),
@@ -390,14 +399,22 @@ export const StudentForm = ({ mode, studentId }: StudentFormProps) => {
     control: form.control,
     name: "programLevel",
   }) as ProgramLevel;
+  const selectedProgram = useWatch({
+    control: form.control,
+    name: "program",
+  });
 
   const programOptions = useMemo(
-    () =>
-      getProgramsByLevel(selectedProgramLevel).map((program) => ({
-        label: program,
-        value: program,
-      })),
-    [selectedProgramLevel],
+    () => {
+      const activeCourses = (coursesQuery.data?.data ?? [])
+        .filter((course) => course.program === programLevelApiMap[selectedProgramLevel])
+        .sort((left, right) => left.sortOrder - right.sortOrder || left.courseName.localeCompare(right.courseName))
+        .map((course) => ({ label: `${course.courseCode} — ${course.courseName}`, value: course.courseName }));
+      if (selectedProgram && !activeCourses.some((course) => course.value === selectedProgram)) {
+        activeCourses.unshift({ label: `${selectedProgram} (existing selection)`, value: selectedProgram });
+      }
+      return activeCourses;
+    }, [coursesQuery.data?.data, selectedProgram, selectedProgramLevel],
   );
 
   const onProgramLevelChange = (value: string) => {
@@ -654,12 +671,22 @@ export const StudentForm = ({ mode, studentId }: StudentFormProps) => {
           <SelectFormField
             className="col-span-12 @4xl:col-span-8"
             control={form.control}
+            disabled={coursesQuery.isLoading || !programOptions.length}
             label="Program"
             name="program"
             options={programOptions}
-            placeholder="Select Curriculum"
+            placeholder={coursesQuery.isLoading ? "Loading active courses..." : "Select active course"}
             requirement="required"
           />
+          {coursesQuery.isError ? (
+            <p className="col-span-12 text-sm text-destructive">
+              Active courses could not be loaded. Refresh the page and try again.
+            </p>
+          ) : !coursesQuery.isLoading && !programOptions.length ? (
+            <p className="col-span-12 text-sm text-muted-foreground">
+              No active courses exist for this program level. Add the course first in Program & Courses.
+            </p>
+          ) : null}
         </div>
       </div>
 

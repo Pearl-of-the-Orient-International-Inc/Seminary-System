@@ -200,6 +200,12 @@ const paymentStatusLabelMap: Record<
   REJECTED: "Pending",
 };
 
+const enrollmentTypeLabelMap: Record<string, EnrollmentType> = {
+  REGULAR: "New",
+  TRANSFEREE: "Transferee",
+  CROSS_ENROLLEE: "Returning",
+};
+
 const formatDate = (value?: string | null) => {
   if (!value) return "Not provided";
 
@@ -245,7 +251,8 @@ export const mapSeminaryApplicationToEnrollmentRecord = (
   documentsStatus: getDocumentsStatus(application),
   email: application.emailAddress ?? application.member?.user?.email ?? "Not provided",
   enrollmentId: `POTSC-ENR-${application.createdAt.slice(0, 4)}-${application.id.slice(0, 8).toUpperCase()}`,
-  enrollmentType: application.memberId ? "Returning" : "New",
+  enrollmentType:
+    enrollmentTypeLabelMap[application.enrollmentType] ?? "New",
   paymentStatus: application.payment
     ? paymentStatusLabelMap[application.payment.status] ?? "For Verification"
     : "Awaiting Proof",

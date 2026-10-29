@@ -28,11 +28,16 @@ export type SectionOption = (typeof sectionOptions)[number];
 export type WeekDay = (typeof weekDays)[number];
 
 export type TimetableSubject = {
+  scheduleId?: string;
+  courseId?: string;
+  instructorId?: string;
   code: string;
   title: string;
   lecturer: string;
   modality: "Online" | "Face to Face";
   accentClassName: string;
+  location?: string | null;
+  meetingLink?: string | null;
 };
 
 export type TimetableEntry = {
@@ -54,9 +59,9 @@ export type TimetableRow =
     };
 
 export type TimetableRecord = {
-  academicYear: AcademicYearOption;
-  className: ClassOption;
-  section: SectionOption;
+  academicYear: string;
+  className: string;
+  section: string;
   rows: TimetableRow[];
 };
 

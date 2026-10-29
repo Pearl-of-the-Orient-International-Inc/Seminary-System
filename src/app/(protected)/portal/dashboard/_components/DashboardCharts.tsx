@@ -26,12 +26,17 @@ import {
 } from "@/components/ui/chart";
 import {
   paymentConfig,
-  paymentStatusTrend,
   programConfig,
-  programDistribution,
 } from "./data";
+import type { SeminaryDashboardData } from "@/features/seminary/seminary.types";
 
-export const DashboardCharts = () => {
+const programLabel = (program: string | null) => {
+  if (program === "MASTER_WITH_THESIS") return "Masteral";
+  if (program === "DOCTORATE_WITH_DISSERTATION") return "Doctorate";
+  return program ? `${program[0]}${program.slice(1).toLowerCase()}` : "Not specified";
+};
+
+export const DashboardCharts = ({ data }: { data: SeminaryDashboardData }) => {
   return (
     <>
       <div className="grid gap-6 xl:grid-cols-2">
@@ -44,7 +49,7 @@ export const DashboardCharts = () => {
           </CardHeader>
           <CardContent>
             <ChartContainer config={paymentConfig} className="min-h-62.5 w-full">
-              <BarChart data={paymentStatusTrend} margin={{ left: 8, right: 8, top: 8 }}>
+              <BarChart data={data.paymentStatusTrend.map((item) => ({ ...item, period: new Date(`${item.period}-01T00:00:00`).toLocaleDateString("en-PH", { month: "short" }) }))} margin={{ left: 8, right: 8, top: 8 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="period"
@@ -66,7 +71,7 @@ export const DashboardCharts = () => {
                   fill="var(--color-pending)"
                 />
                 <Bar
-                  dataKey="flagged"
+                  dataKey="rejected"
                   stackId="payments"
                   fill="var(--color-flagged)"
                 />
@@ -91,15 +96,15 @@ export const DashboardCharts = () => {
                 <ChartTooltip content={<ChartTooltipContent hideLabel nameKey="name" />} />
                 <ChartLegend content={<ChartLegendContent nameKey="name" />} />
                 <Pie
-                  data={programDistribution}
+                  data={data.programDistribution.map((entry) => ({ ...entry, name: programLabel(entry.name) }))}
                   dataKey="value"
                   nameKey="name"
                   innerRadius={58}
                   outerRadius={92}
                   strokeWidth={4}
                 >
-                  {programDistribution.map((entry) => (
-                    <Cell key={entry.name} fill={entry.fill} />
+                  {data.programDistribution.map((entry, index) => (
+                    <Cell key={entry.name ?? "unspecified"} fill={["#c8dabc", "#1f6a39", "#4d8b57", "#7cab7d"][index % 4]} />
                   ))}
                 </Pie>
               </PieChart>

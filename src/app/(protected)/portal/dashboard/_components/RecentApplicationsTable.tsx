@@ -7,10 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ApplicationRecord } from "./data";
+import type { SeminaryDashboardData } from "@/features/seminary/seminary.types";
 
 type RecentApplicationsTableProps = {
-  applications: ApplicationRecord[];
+  applications: SeminaryDashboardData["recentApplications"];
 };
 
 export const RecentApplicationsTable = ({
@@ -53,7 +53,7 @@ export const RecentApplicationsTable = ({
                         <div>
                           <p className="font-medium">{item.student}</p>
                           <p className="text-xs text-muted-foreground">
-                            {item.id}
+                            {item.studentId ?? item.id}
                           </p>
                         </div>
                       </div>
@@ -68,19 +68,19 @@ export const RecentApplicationsTable = ({
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-full bg-[#f3f5ef] px-3 py-1 text-xs font-medium text-[#4b6150] dark:bg-[#26362b] dark:text-[#d6e4d8]">
-                        {item.programLevel}
+                        {item.programLevel?.replaceAll("_", " ") ?? "Not specified"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
-                      {item.applicationType}
+                      {item.applicationType.replaceAll("_", " ")}
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-full bg-[#eef3ec] px-3 py-1 text-xs font-medium text-[#255e31] dark:bg-[#223129] dark:text-[#dce7dd]">
-                        {item.enrollmentStatus}
+                        {item.enrollmentStatus.replaceAll("_", " ")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
-                      {item.paymentStatus}
+                      {item.paymentStatus.replaceAll("_", " ")}
                     </td>
                   </tr>
                 ))

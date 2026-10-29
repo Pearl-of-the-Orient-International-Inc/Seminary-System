@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import * as React from "react";
@@ -12,12 +13,10 @@ import {
   IconCreditCard,
   IconFileDescription,
   IconFileText,
-  IconHelpCircle,
   IconLayoutDashboard,
   IconReceipt2,
   IconReportAnalytics,
   IconSchool,
-  IconSettings,
   IconUsers,
   IconUserStar,
   IconNotebook,
@@ -40,6 +39,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { useCurrentUserQuery } from "@/features/auth/auth.hooks";
+import { useSeminaryAnnouncementsQuery } from "@/features/seminary/seminary.hooks";
 import { isInstructorAllowedPath } from "./instructor-access";
 
 type SidebarItem = {
@@ -67,7 +67,6 @@ const sections: SidebarSection[] = [
         title: "Announcement",
         url: "/portal/announcement",
         icon: IconBroadcast,
-        badge: "2",
       },
       {
         title: "Admissions",
@@ -150,11 +149,6 @@ const sections: SidebarSection[] = [
     label: "System",
     items: [
       {
-        title: "Settings",
-        url: "/portal/school-settings",
-        icon: IconSettings,
-      },
-      {
         title: "Academic Years",
         url: "/portal/academic-years",
         icon: IconCalendar,
@@ -174,11 +168,56 @@ const sections: SidebarSection[] = [
         url: "/portal/reports",
         icon: IconFileDescription,
       },
+    ],
+  },
+];
+
+const studentSections: SidebarSection[] = [
+  {
+    label: "Overview",
+    items: [
       {
-        title: "Help & Support",
-        url: "/portal/help-support",
-        icon: IconHelpCircle,
+        title: "Dashboard",
+        url: "/students/dashboard",
+        icon: IconLayoutDashboard,
       },
+      {
+        title: "Announcements",
+        url: "/students/announcements",
+        icon: IconBroadcast,
+      },
+      { title: "My Grades", url: "/students/grades", icon: IconClipboardText },
+    ],
+  },
+  {
+    label: "Learning",
+    items: [
+      {
+        title: "Learning Materials",
+        url: "/students/materials",
+        icon: IconSchool,
+      },
+      {
+        title: "Assignments",
+        url: "/students/assignments",
+        icon: IconNotebook,
+      },
+      {
+        title: "Examinations",
+        url: "/students/examinations",
+        icon: IconBriefcase,
+      },
+      {
+        title: "Document Requests",
+        url: "/students/document-requests",
+        icon: IconFileText,
+      },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { title: "My Profile", url: "/students/profile", icon: IconUserStar },
     ],
   },
 ];
@@ -193,18 +232,55 @@ export const AppSidebar = ({
   const pathname = usePathname();
   const { state } = useSidebar();
   const { data: currentUser } = useCurrentUserQuery();
+  const announcementsQuery = useSeminaryAnnouncementsQuery();
   const isCollapsed = state === "collapsed";
+  const [seenAnnouncementsAt, setSeenAnnouncementsAt] = React.useState(0);
+  const announcementUrl =
+    currentUser?.role === "MEMBER"
+      ? "/students/announcements"
+      : "/portal/announcement";
+  const announcementStorageKey = currentUser?.id
+    ? `seminary-announcements-seen:${currentUser.id}`
+    : null;
+  const unreadAnnouncements = React.useMemo(() => {
+    const visibleAnnouncements =
+      announcementsQuery.data?.data.filter(
+        (item) => item.status === "PUBLISHED",
+      ) ?? [];
+    if (!announcementStorageKey || typeof window === "undefined")
+      return visibleAnnouncements.length;
+    const seenAt =
+      seenAnnouncementsAt ||
+      Number(window.localStorage.getItem(announcementStorageKey) ?? 0);
+    return visibleAnnouncements.filter(
+      (item) => new Date(item.createdAt).getTime() > seenAt,
+    ).length;
+  }, [
+    announcementStorageKey,
+    announcementsQuery.data?.data,
+    seenAnnouncementsAt,
+  ]);
+
+  React.useEffect(() => {
+    if (announcementStorageKey && isItemActive(pathname, announcementUrl)) {
+      const now = Date.now();
+      window.localStorage.setItem(announcementStorageKey, String(now));
+      setSeenAnnouncementsAt(now);
+    }
+  }, [announcementStorageKey, announcementUrl, pathname]);
   const visibleSections =
-    currentUser?.role === "INSTRUCTOR"
-      ? sections
-          .map((section) => ({
-            ...section,
-            items: section.items.filter((item) =>
-              isInstructorAllowedPath(item.url),
-            ),
-          }))
-          .filter((section) => section.items.length > 0)
-      : sections;
+    currentUser?.role === "MEMBER"
+      ? studentSections
+      : currentUser?.role === "INSTRUCTOR"
+        ? sections
+            .map((section) => ({
+              ...section,
+              items: section.items.filter((item) =>
+                isInstructorAllowedPath(item.url),
+              ),
+            }))
+            .filter((section) => section.items.length > 0)
+        : sections;
 
   return (
     <Sidebar collapsible="icon" className="border-r-0" {...props}>
@@ -233,7 +309,14 @@ export const AppSidebar = ({
               <p className="text-xs font-medium uppercase">
                 Pearl of the Orient Theological Seminary and Colleges
               </p>
-              <Badge>{currentUser?.role === "ADMIN" ? "Admin" : "Instructor"} Portal</Badge>
+              <Badge>
+                {currentUser?.role === "MEMBER"
+                  ? "Student"
+                  : currentUser?.role === "ADMIN"
+                    ? "Admin"
+                    : "Instructor"}{" "}
+                Portal
+              </Badge>
             </div>
           </div>
         )}
@@ -260,6 +343,10 @@ export const AppSidebar = ({
                 {section.items.map((item) => {
                   const active = isItemActive(pathname, item.url);
                   const Icon = item.icon;
+                  const badge =
+                    item.url === announcementUrl && unreadAnnouncements > 0
+                      ? String(unreadAnnouncements)
+                      : item.badge;
 
                   return (
                     <SidebarMenuItem key={item.title}>
@@ -286,9 +373,9 @@ export const AppSidebar = ({
                               <span className="truncate text-[15px] font-medium">
                                 {item.title}
                               </span>
-                              {item.badge ? (
+                              {badge ? (
                                 <span className="ml-auto inline-flex min-w-7 items-center justify-center rounded-full bg-[#c65252] px-2 py-0.5 text-xs font-semibold text-white">
-                                  {item.badge}
+                                  {badge}
                                 </span>
                               ) : null}
                             </>

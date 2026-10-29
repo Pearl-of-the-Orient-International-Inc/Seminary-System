@@ -150,6 +150,44 @@ export type SeminaryProgramLevel =
 export type SeminaryCourseModality = "FACE_TO_FACE" | "ONLINE" | "BOTH";
 
 export type SeminaryCourseStatus = "ACTIVE" | "INACTIVE";
+export type SeminaryAnnouncementKind = "ANNOUNCEMENT" | "EVENT";
+export type SeminaryAnnouncementCategory =
+  | "ACADEMIC"
+  | "ADMINISTRATION"
+  | "FORMATION"
+  | "ADMISSIONS";
+export type SeminaryAnnouncementAudience =
+  | "ALL"
+  | "STUDENTS"
+  | "INSTRUCTORS"
+  | "STUDENTS_AND_INSTRUCTORS";
+export type SeminaryAnnouncementStatus = "DRAFT" | "PUBLISHED";
+export type SeminaryCourseScheduleStatus =
+  | "DRAFT"
+  | "SCHEDULED"
+  | "CANCELLED"
+  | "COMPLETED";
+export type SeminaryDocumentDeliveryMethod = "PICKUP" | "EMAIL" | "COURIER";
+export type SeminaryDocumentRequestStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "PROCESSING"
+  | "READY_FOR_RELEASE"
+  | "RELEASED";
+export type SeminaryDocumentPaymentStatus =
+  | "NOT_APPLICABLE"
+  | "PENDING"
+  | "PAID"
+  | "WAIVED";
+export type SeminaryScheduleWeekday =
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY";
 export type SeminaryStudyMaterialType =
   | "NOTES"
   | "PRESENTATION"
@@ -223,6 +261,7 @@ export interface SeminaryGradeScaleRow {
 export interface SeminaryGradeCriteriaWeights {
   attendance: number;
   coursework: number;
+  character: number;
   exam: number;
 }
 
@@ -336,6 +375,184 @@ export interface SeminaryCoursePayload {
   subjects: SeminaryCourseSubject[];
   status?: string;
   sortOrder?: number;
+}
+
+export interface SeminaryCourseSchedule {
+  id: string;
+  period: string;
+  academicYear: string;
+  className: string;
+  courseId: string;
+  instructorId: string;
+  subjectName: string;
+  units: number;
+  scheduledDate: string | null;
+  recurrenceDays: SeminaryScheduleWeekday[];
+  recurrenceEndDate: string | null;
+  startTime: string;
+  endTime: string;
+  deliveryMode: SeminaryCourseModality;
+  location: string | null;
+  meetingLink: string | null;
+  status: SeminaryCourseScheduleStatus;
+  course: Pick<SeminaryCourse, "id" | "courseCode" | "courseName" | "program">;
+  instructor: { id: string; name: string; userId: string | null };
+}
+
+export interface SeminaryCourseSchedulePayload {
+  academicYear: string;
+  period: string;
+  className: string;
+  courseId: string;
+  instructorId: string;
+  subjectName: string;
+  units: number;
+  scheduledDate?: string;
+  recurrenceDays?: SeminaryScheduleWeekday[];
+  recurrenceEndDate?: string;
+  startTime: string;
+  endTime: string;
+  deliveryMode: SeminaryCourseModality;
+  location?: string;
+  meetingLink?: string;
+  status?: SeminaryCourseScheduleStatus;
+}
+
+export interface SeminaryAnnouncement {
+  id: string;
+  title: string;
+  summary: string | null;
+  kind: SeminaryAnnouncementKind;
+  category: SeminaryAnnouncementCategory;
+  audience: SeminaryAnnouncementAudience;
+  location: string | null;
+  allDay: boolean;
+  startsAt: string;
+  endsAt: string | null;
+  status: SeminaryAnnouncementStatus;
+  createdAt: string;
+  updatedAt: string;
+  createdByUser: { id: string; name: string };
+}
+
+export interface SeminaryAnnouncementPayload {
+  title: string;
+  summary?: string | null;
+  kind: SeminaryAnnouncementKind;
+  category: SeminaryAnnouncementCategory;
+  audience: SeminaryAnnouncementAudience;
+  location?: string | null;
+  allDay?: boolean;
+  startsAt: string;
+  endsAt?: string | null;
+  status?: SeminaryAnnouncementStatus;
+}
+
+export interface SeminaryDashboardData {
+  academicYear: string;
+  kpis: {
+    totalStudents: number;
+    pendingEnrollments: number;
+    pendingPayments: number;
+    submittedDocuments: number;
+  };
+  enrollmentTrend: { date: string; enrolled: number; pending: number }[];
+  paymentStatusTrend: { period: string; verified: number; pending: number; rejected: number }[];
+  programDistribution: { name: SeminaryProgramLevel | null; value: number }[];
+  recentApplications: {
+    id: string;
+    student: string;
+    studentId: string | null;
+    program: string;
+    programLevel: SeminaryProgramLevel | null;
+    applicationType: string;
+    enrollmentStatus: SeminaryApplicationStatus;
+    paymentStatus: SeminaryPaymentStatus | "NOT_SUBMITTED";
+    submittedAt: string;
+  }[];
+  events: {
+    id: string;
+    title: string;
+    category: SeminaryAnnouncementCategory;
+    startsAt: string;
+    endsAt: string | null;
+    allDay: boolean;
+    location: string | null;
+  }[];
+}
+
+export interface SeminaryDashboardResponse {
+  code: string;
+  message: string;
+  data: SeminaryDashboardData;
+}
+
+export type SeminaryReportScope = "INSTITUTIONAL" | "ACADEMIC" | "FINANCE" | "REGISTRAR";
+
+export interface SeminaryReportsData {
+  period: { startDate: string; endDate: string };
+  scope: SeminaryReportScope;
+  summary: { totalEnrollees: number; totalCollections: number; completionRate: number; retentionRate: number };
+  monthlyPerformance: { month: string; enrollment: number; collection: number; completionRate: number }[];
+  programs: { name: SeminaryProgramLevel; enrollees: number; collection: number; collectionRate: number; completionRate: number; retentionRate: number; gradeRecords: number }[];
+  operationalReports: { reportId: string; reportName: string; program: string; generatedOn: string; pendingItems: number; collectionRate: number; status: "Healthy" | "Watchlist" | "Critical" }[];
+}
+
+export interface SeminaryReportsResponse {
+  code: string;
+  message: string;
+  data: SeminaryReportsData;
+}
+
+export interface SeminaryDocumentRequestType {
+  id: string;
+  name: string;
+  description: string | null;
+  fee: number | string | null;
+  requiresSupportingDetails: boolean;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface SeminaryDocumentRequest {
+  id: string;
+  referenceNumber: string;
+  purpose: string;
+  deliveryMethod: SeminaryDocumentDeliveryMethod;
+  supportingDetails: string | null;
+  fee: number | string | null;
+  paymentStatus: SeminaryDocumentPaymentStatus;
+  status: SeminaryDocumentRequestStatus;
+  reviewRemarks: string | null;
+  reviewedAt: string | null;
+  processedAt: string | null;
+  readyAt: string | null;
+  releasedAt: string | null;
+  releaseReference: string | null;
+  receivedBy: string | null;
+  createdAt: string;
+  documentType: SeminaryDocumentRequestType;
+  studentApplication: Pick<
+    SeminaryApplicationDetails,
+    "id" | "studentId" | "givenName" | "middleName" | "surname" | "emailAddress" | "mobilePhone" | "programLevel" | "programCourse"
+  >;
+  reviewedByUser: { id: string; name: string } | null;
+  releasedByUser: { id: string; name: string } | null;
+}
+
+export interface SeminaryDocumentRequestPayload {
+  documentTypeId: string;
+  purpose: string;
+  deliveryMethod: SeminaryDocumentDeliveryMethod;
+  supportingDetails?: string;
+}
+
+export interface SeminaryDocumentRequestStatusPayload {
+  status: SeminaryDocumentRequestStatus;
+  reviewRemarks?: string;
+  paymentStatus?: SeminaryDocumentPaymentStatus;
+  releaseReference?: string;
+  receivedBy?: string;
 }
 
 export interface SeminaryStudyMaterial {
@@ -471,12 +688,35 @@ export interface SeminaryGradeRecord {
   instructorUserId: string | null;
   instructorName: string;
   term: string;
+  attendanceEarned: number | null;
+  attendanceTotal: number | null;
+  courseworkEarned: number | null;
+  courseworkTotal: number | null;
+  characterEarned: number | null;
+  characterTotal: number | null;
+  examEarned: number | null;
+  examTotal: number | null;
+  weightedPercentage: number | null;
   finalGrade: string;
   remarks: SeminaryGradeRecordRemark;
   status: SeminaryGradeRecordStatus;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SeminaryStudentPortalData {
+  student: SeminaryApplicationDetails;
+  grades: SeminaryGradeRecord[];
+  materials: SeminaryStudyMaterial[];
+  assignments: SeminaryAssignment[];
+  examinations: SeminaryExamination[];
+}
+
+export interface SeminaryStudentPortalResponse {
+  code: string;
+  message: string;
+  data: SeminaryStudentPortalData;
 }
 
 export interface SeminaryGradeRecordPayload {
@@ -487,6 +727,21 @@ export interface SeminaryGradeRecordPayload {
   remarks?: SeminaryGradeRecordRemark;
   status?: SeminaryGradeRecordStatus;
   notes?: string;
+}
+
+export interface SeminaryBulkGradeEncodingPayload {
+  subject: string;
+  entries: Array<{
+    studentApplicationId: string;
+    attendanceEarned: number;
+    attendanceTotal: number;
+    courseworkEarned: number;
+    courseworkTotal: number;
+    characterEarned: number;
+    characterTotal: number;
+    examEarned: number;
+    examTotal: number;
+  }>;
 }
 
 export interface SeminaryInstructorEvaluation {
@@ -757,6 +1012,54 @@ export interface SeminaryCourseResponse {
   code: string;
   message: string;
   data: SeminaryCourse;
+}
+
+export interface SeminaryCourseSchedulesResponse {
+  code: string;
+  message: string;
+  data: SeminaryCourseSchedule[];
+}
+
+export interface SeminaryCourseScheduleResponse {
+  code: string;
+  message: string;
+  data: SeminaryCourseSchedule;
+}
+
+export interface SeminaryAnnouncementsResponse {
+  code: string;
+  message: string;
+  data: SeminaryAnnouncement[];
+}
+
+export interface SeminaryAnnouncementResponse {
+  code: string;
+  message: string;
+  data: SeminaryAnnouncement;
+}
+
+export interface SeminaryDocumentRequestTypesResponse {
+  code: string;
+  message: string;
+  data: SeminaryDocumentRequestType[];
+}
+
+export interface SeminaryDocumentRequestTypeResponse {
+  code: string;
+  message: string;
+  data: SeminaryDocumentRequestType;
+}
+
+export interface SeminaryDocumentRequestsResponse {
+  code: string;
+  message: string;
+  data: SeminaryDocumentRequest[];
+}
+
+export interface SeminaryDocumentRequestResponse {
+  code: string;
+  message: string;
+  data: SeminaryDocumentRequest;
 }
 
 export interface SeminaryStudyMaterialsResponse {
