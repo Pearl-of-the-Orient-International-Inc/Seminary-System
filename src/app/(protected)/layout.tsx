@@ -18,6 +18,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           style={
             {
               "--sidebar-width": "calc(var(--spacing) * 70)",
+              "--sidebar-width-icon": "calc(var(--spacing) * 18)",
               "--header-height": "calc(var(--spacing) * 12)",
             } as React.CSSProperties
           }

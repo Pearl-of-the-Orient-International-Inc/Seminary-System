@@ -6,6 +6,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Old English Text MT";
+  src: url("/fonts/Old%20English%20Text%20MT%20Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Bodoni MT";
+  src: url("/fonts/Bodoni%20MT%20Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #0a0a0a;
@@ -580,4 +594,63 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+@media print {
+  @page {
+    size: legal portrait;
+    margin: 0;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .reports-print-controls {
+    display: none !important;
+  }
+
+  .reports-print-document {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483647 !important;
+    display: block !important;
+    width: 100% !important;
+    min-height: 100% !important;
+    max-width: none !important;
+    padding: 8mm !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  .tor-print-document {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    width: 216mm;
+    height: 356mm;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 2147483647;
+    background-color: #fff;
+    background-image: url("/TOR-bg.png");
+    background-position: center;
+    background-size: cover;
+  }
+
+  .tor-print-document > div {
+    width: 216mm !important;
+    height: 356mm !important;
+    aspect-ratio: 2550 / 4200 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background-image: none !important;
+    transform: scale(0.98);
+    transform-origin: top center;
+  }
 }

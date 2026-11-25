@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ChangeEvent, DragEvent } from "react";
 import {
@@ -16,14 +15,6 @@ import {
 import type { Row } from "@tanstack/react-table";
 
 import { GlobalDataTable } from "@/components/DataTable";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -105,7 +96,10 @@ const defaultMaterialForm: StudyMaterialFormState = {
   type: "Document",
 };
 
-const materialTypeValueMap: Record<StudyMaterialType, SeminaryStudyMaterialType> = {
+const materialTypeValueMap: Record<
+  StudyMaterialType,
+  SeminaryStudyMaterialType
+> = {
   Notes: "NOTES",
   Presentation: "PRESENTATION",
   Document: "DOCUMENT",
@@ -113,7 +107,10 @@ const materialTypeValueMap: Record<StudyMaterialType, SeminaryStudyMaterialType>
   Archive: "ARCHIVE",
 };
 
-const materialTypeLabelMap: Record<SeminaryStudyMaterialType, StudyMaterialType> = {
+const materialTypeLabelMap: Record<
+  SeminaryStudyMaterialType,
+  StudyMaterialType
+> = {
   NOTES: "Notes",
   PRESENTATION: "Presentation",
   DOCUMENT: "Document",
@@ -183,42 +180,40 @@ const Page = () => {
     useState<SubjectFilterOption>("All Subjects");
   const [typeFilter, setTypeFilter] = useState<TypeFilterOption>("All Types");
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false);
-  const [previewRecord, setPreviewRecord] = useState<StudyMaterialRecord | null>(
-    null,
-  );
-  const [editingRecord, setEditingRecord] = useState<StudyMaterialRecord | null>(
-    null,
-  );
+  const [previewRecord, setPreviewRecord] =
+    useState<StudyMaterialRecord | null>(null);
+  const [editingRecord, setEditingRecord] =
+    useState<StudyMaterialRecord | null>(null);
   const [materialForm, setMaterialForm] =
     useState<StudyMaterialFormState>(defaultMaterialForm);
   const uploaderName = currentUser?.name ?? "Current Instructor";
   const coursesQuery = useSeminaryCoursesQuery({ limit: 100, page: 1 });
-  const materialsQuery = useSeminaryStudyMaterialsQuery({ limit: 100, page: 1 });
+  const materialsQuery = useSeminaryStudyMaterialsQuery({
+    limit: 100,
+    page: 1,
+  });
   const uploadMaterialMutation = useUploadSeminaryStudyMaterialMutation();
   const createMaterialMutation = useCreateSeminaryStudyMaterialMutation();
   const updateMaterialMutation = useUpdateSeminaryStudyMaterialMutation();
   const deleteMaterialMutation = useDeleteSeminaryStudyMaterialMutation();
 
-  const subjectOptions = useMemo(
-    () => {
-      const isInstructor = currentUser?.role === "INSTRUCTOR";
+  const subjectOptions = useMemo(() => {
+    const isInstructor = currentUser?.role === "INSTRUCTOR";
 
-      return Array.from(
-        new Set(
-          (coursesQuery.data?.data ?? [])
-            .flatMap((course) => course.subjects ?? [])
-            .filter(
-              (subject) =>
-                !isInstructor ||
-                subject.professor.toLowerCase() === uploaderName.toLowerCase(),
-            )
-            .map((subject) => subject.subjectName)
-            .filter(Boolean),
-        ),
-      ).sort((first, second) => first.localeCompare(second));
-    },
-    [coursesQuery.data?.data, currentUser?.role, uploaderName],
-  );
+    return Array.from(
+      new Set(
+        (coursesQuery.data?.data ?? [])
+          .flatMap((course) => course.subjects ?? [])
+          .filter(
+            (subject) =>
+              !isInstructor ||
+              subject.professor.toLowerCase() === uploaderName.toLowerCase(),
+          )
+          .map((subject) => subject.subjectName)
+          .filter(Boolean),
+      ),
+    ).sort((first, second) => first.localeCompare(second));
+  }, [coursesQuery.data?.data, currentUser?.role, uploaderName]);
   const subjectFilterOptions = useMemo<SubjectFilterOption[]>(
     () => ["All Subjects", ...subjectOptions],
     [subjectOptions],
@@ -255,7 +250,7 @@ const Page = () => {
         description: publishedPercent,
         icon: <ScrollText className="size-6" />,
         accentClassName:
-          "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
+          "bg-green-500/10 text-green-700 dark:bg-green-400/10 dark:text-green-300",
       },
       {
         title: "Drafts",
@@ -272,8 +267,10 @@ const Page = () => {
     () =>
       materials.filter((material) => {
         const subjectMatch =
-          subjectFilter === "All Subjects" || material.subject === subjectFilter;
-        const typeMatch = typeFilter === "All Types" || material.type === typeFilter;
+          subjectFilter === "All Subjects" ||
+          material.subject === subjectFilter;
+        const typeMatch =
+          typeFilter === "All Types" || material.type === typeFilter;
 
         return subjectMatch && typeMatch;
       }),
@@ -324,7 +321,9 @@ const Page = () => {
           payload,
         });
       } else if (materialForm.file) {
-        const uploaded = await uploadMaterialMutation.mutateAsync(materialForm.file);
+        const uploaded = await uploadMaterialMutation.mutateAsync(
+          materialForm.file,
+        );
         await createMaterialMutation.mutateAsync({
           ...payload,
           fileUrl: uploaded.fileUrl,
@@ -428,237 +427,60 @@ const Page = () => {
 
   return (
     <>
-    <section className="space-y-6 p-10">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-blue-950 dark:text-blue-100">
-            Study Materials
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Organize and share learning materials with students.
-          </p>
+      <section className="space-y-6 p-10">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold tracking-tight text-blue-950 dark:text-blue-100">
+              Study Materials
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Organize and share learning materials with students.
+            </p>
+          </div>
         </div>
 
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/admin/dashboard">Dashboard</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Learning Management System</BreadcrumbPage>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Study Materials</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {stats.map((stat) => (
+            <Card
+              key={stat.title}
+              className="border-border/70 bg-white py-0 shadow-sm"
+            >
+              <CardContent className="flex items-start gap-4 p-5">
+                <div
+                  className={`flex size-13 items-center justify-center rounded-lg ${stat.accentClassName}`}
+                >
+                  {stat.icon}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-slate-500">
+                    {stat.title}
+                  </p>
+                  <p className="text-3xl font-semibold tracking-tight text-slate-900">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-slate-500">{stat.description}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {stats.map((stat) => (
-          <Card
-            key={stat.title}
-            className="border-border/70 bg-white py-0 shadow-sm"
-          >
-            <CardContent className="flex items-start gap-4 p-5">
-              <div
-                className={`flex size-13 items-center justify-center rounded-lg ${stat.accentClassName}`}
-              >
-                {stat.icon}
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-500">{stat.title}</p>
-                <p className="text-4xl font-semibold tracking-tight text-slate-900">
-                  {stat.value}
-                </p>
-                <p className="text-xs text-slate-500">{stat.description}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="border-border/70 shadow-sm">
-        <CardContent className="space-y-5">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Subject</p>
-              <Select
-                value={subjectFilter}
-                onValueChange={(value) =>
-                  setSubjectFilter(value as SubjectFilterOption)
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjectFilterOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Type</p>
-              <Select
-                value={typeFilter}
-                onValueChange={(value) => setTypeFilter(value as TypeFilterOption)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {typeFilterOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <GlobalDataTable
-            columns={columns}
-            data={filteredMaterials}
-            cellAction={renderCellActions}
-            exportFileName="study-materials"
-            filterPlaceholder="Search materials..."
-            emptyMessage={
-              materialsQuery.isLoading
-                ? "Loading study materials..."
-                : "No study materials found."
-            }
-            pageSizeOptions={[7, 10, 20]}
-            toolbarActions={
-              <Button
-                type="button"
-                onClick={() => {
-                  setEditingRecord(null);
-                  setMaterialForm((current) => ({
-                    ...defaultMaterialForm,
-                    subject: current.subject || subjectOptions[0] || "",
-                  }));
-                  setUploadSheetOpen(true);
-                }}
-              >
-                <Plus className="size-4" />
-                Upload Material
-              </Button>
-            }
-            onDeleteSelected={async (selectedRows) => {
-              await Promise.all(
-                selectedRows.map((material) =>
-                  deleteMaterialMutation.mutateAsync(material.id),
-                ),
-              );
-            }}
-          />
-        </CardContent>
-      </Card>
-    </section>
-    <Sheet
-      open={uploadSheetOpen}
-      onOpenChange={(open) => {
-        setUploadSheetOpen(open);
-        if (!open) {
-          setEditingRecord(null);
-          setMaterialForm(defaultMaterialForm);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-          }
-        }
-      }}
-    >
-      <SheetContent
-        side="right"
-        className="w-full overflow-y-auto p-0 sm:max-w-xl"
-      >
-        <form onSubmit={handleCreateMaterial} className="flex min-h-full flex-col">
-          <SheetHeader className="border-b px-6 py-5 text-left">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-blue-500/10 text-blue-700">
-              <FileUp className="size-5" />
-            </div>
-            <SheetTitle>
-              {editingRecord ? "Edit Study Material" : "Upload Study Material"}
-            </SheetTitle>
-            <SheetDescription>
-              {editingRecord
-                ? "Update material details and publication status."
-                : "Create a material record and attach source file details."}
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="grid gap-5 px-6 py-5">
-            <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm">
-              <div className="text-muted-foreground">Uploaded by</div>
-              <div className="font-medium">{uploaderName}</div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="material-title">Title</Label>
-              <Input
-                id="material-title"
-                value={materialForm.title}
-                onChange={(event) =>
-                  setMaterialForm((current) => ({
-                    ...current,
-                    title: event.target.value,
-                  }))
-                }
-                placeholder="Enter material title"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="material-subtitle">Subtitle</Label>
-              <Textarea
-                id="material-subtitle"
-                value={materialForm.subtitle}
-                onChange={(event) =>
-                  setMaterialForm((current) => ({
-                    ...current,
-                    subtitle: event.target.value,
-                  }))
-                }
-                placeholder="Short description or module note"
-                className="min-h-24"
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
+        <Card className="border-border/70 shadow-sm">
+          <CardContent className="space-y-5">
+            <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Subject</Label>
+                <p className="text-sm font-medium text-foreground">Subject</p>
                 <Select
-                  value={selectedMaterialSubject}
+                  value={subjectFilter}
                   onValueChange={(value) =>
-                    setMaterialForm((current) => ({
-                      ...current,
-                      subject: value,
-                    }))
+                    setSubjectFilter(value as SubjectFilterOption)
                   }
-                  disabled={coursesQuery.isLoading || subjectOptions.length === 0}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={
-                        coursesQuery.isLoading
-                          ? "Loading subjects..."
-                          : "Select subject"
-                      }
-                    />
+                    <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                   <SelectContent>
-                    {subjectOptions.map((option) => (
+                    {subjectFilterOptions.map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}
                       </SelectItem>
@@ -668,21 +490,18 @@ const Page = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Type</Label>
+                <p className="text-sm font-medium text-foreground">Type</p>
                 <Select
-                  value={materialForm.type}
+                  value={typeFilter}
                   onValueChange={(value) =>
-                    setMaterialForm((current) => ({
-                      ...current,
-                      type: value as StudyMaterialType,
-                    }))
+                    setTypeFilter(value as TypeFilterOption)
                   }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {studyMaterialTypeOptions.map((option) => (
+                    {typeFilterOptions.map((option) => (
                       <SelectItem key={option} value={option}>
                         {option}
                       </SelectItem>
@@ -692,115 +511,294 @@ const Page = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select
-                value={materialForm.status}
-                onValueChange={(value) =>
-                  setMaterialForm((current) => ({
-                    ...current,
-                    status: value as StudyMaterialRecord["status"],
-                  }))
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {studyMaterialStatusOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <GlobalDataTable
+              columns={columns}
+              data={filteredMaterials}
+              cellAction={renderCellActions}
+              exportFileName="study-materials"
+              filterPlaceholder="Search materials..."
+              emptyMessage={
+                materialsQuery.isLoading
+                  ? "Loading study materials..."
+                  : "No study materials found."
+              }
+              pageSizeOptions={[7, 10, 20]}
+              toolbarActions={
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setEditingRecord(null);
+                    setMaterialForm((current) => ({
+                      ...defaultMaterialForm,
+                      subject: current.subject || subjectOptions[0] || "",
+                    }));
+                    setUploadSheetOpen(true);
+                  }}
+                >
+                  <Plus className="size-4" />
+                  Upload Material
+                </Button>
+              }
+              onDeleteSelected={async (selectedRows) => {
+                await Promise.all(
+                  selectedRows.map((material) =>
+                    deleteMaterialMutation.mutateAsync(material.id),
+                  ),
+                );
+              }}
+            />
+          </CardContent>
+        </Card>
+      </section>
+      <Sheet
+        open={uploadSheetOpen}
+        onOpenChange={(open) => {
+          setUploadSheetOpen(open);
+          if (!open) {
+            setEditingRecord(null);
+            setMaterialForm(defaultMaterialForm);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          }
+        }}
+      >
+        <SheetContent
+          side="right"
+          className="w-full overflow-y-auto p-0 sm:max-w-xl"
+        >
+          <form
+            onSubmit={handleCreateMaterial}
+            className="flex min-h-full flex-col"
+          >
+            <SheetHeader className="border-b px-6 py-5 text-left">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-blue-500/10 text-blue-700">
+                <FileUp className="size-5" />
+              </div>
+              <SheetTitle>
+                {editingRecord
+                  ? "Edit Study Material"
+                  : "Upload Study Material"}
+              </SheetTitle>
+              <SheetDescription>
+                {editingRecord
+                  ? "Update material details and publication status."
+                  : "Create a material record and attach source file details."}
+              </SheetDescription>
+            </SheetHeader>
 
-            <div className="space-y-2">
-              <Label>Material File</Label>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={handleMaterialFileUpload}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="flex min-h-48 w-full flex-col gap-2 rounded-2xl border-dashed bg-primary/5 py-10 text-center"
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={handleMaterialFileDrop}
-              >
-                <CloudUpload className="size-10 text-primary" strokeWidth={1.5} />
-                {materialForm.fileName || "Upload material file"}
-                <span className="text-xs font-normal text-muted-foreground">
-                  {editingRecord
-                    ? "Current file is kept unless a new upload is needed later."
-                    : "Drag and drop your file here"}
-                  <br /> or click to browse
-                </span>
-              </Button>
-              <div className="flex items-start gap-2 rounded-xl border border-dashed bg-blue-600/10 p-4 text-xs text-blue-600">
-                <AlertCircle className="size-4 shrink-0" strokeWidth={1.5} />
-                Upload notes, documents, presentations, charts, or archives for
-                student access.
+            <div className="grid gap-5 px-6 py-5">
+              <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm">
+                <div className="text-muted-foreground">Uploaded by</div>
+                <div className="font-medium">{uploaderName}</div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="material-title">Title</Label>
+                <Input
+                  id="material-title"
+                  value={materialForm.title}
+                  onChange={(event) =>
+                    setMaterialForm((current) => ({
+                      ...current,
+                      title: event.target.value,
+                    }))
+                  }
+                  placeholder="Enter material title"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="material-subtitle">Subtitle</Label>
+                <Textarea
+                  id="material-subtitle"
+                  value={materialForm.subtitle}
+                  onChange={(event) =>
+                    setMaterialForm((current) => ({
+                      ...current,
+                      subtitle: event.target.value,
+                    }))
+                  }
+                  placeholder="Short description or module note"
+                  className="min-h-24"
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Subject</Label>
+                  <Select
+                    value={selectedMaterialSubject}
+                    onValueChange={(value) =>
+                      setMaterialForm((current) => ({
+                        ...current,
+                        subject: value,
+                      }))
+                    }
+                    disabled={
+                      coursesQuery.isLoading || subjectOptions.length === 0
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue
+                        placeholder={
+                          coursesQuery.isLoading
+                            ? "Loading subjects..."
+                            : "Select subject"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjectOptions.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <Select
+                    value={materialForm.type}
+                    onValueChange={(value) =>
+                      setMaterialForm((current) => ({
+                        ...current,
+                        type: value as StudyMaterialType,
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {studyMaterialTypeOptions.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={materialForm.status}
+                  onValueChange={(value) =>
+                    setMaterialForm((current) => ({
+                      ...current,
+                      status: value as StudyMaterialRecord["status"],
+                    }))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {studyMaterialStatusOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Material File</Label>
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleMaterialFileUpload}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex min-h-48 w-full flex-col gap-2 rounded-2xl border-dashed bg-primary/5 py-10 text-center"
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={handleMaterialFileDrop}
+                >
+                  <CloudUpload
+                    className="size-10 text-primary"
+                    strokeWidth={1.5}
+                  />
+                  {materialForm.fileName || "Upload material file"}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {editingRecord
+                      ? "Current file is kept unless a new upload is needed later."
+                      : "Drag and drop your file here"}
+                    <br /> or click to browse
+                  </span>
+                </Button>
+                <div className="flex items-start gap-2 rounded-xl border border-dashed bg-blue-600/10 p-4 text-xs text-blue-600">
+                  <AlertCircle className="size-4 shrink-0" strokeWidth={1.5} />
+                  Upload notes, documents, presentations, charts, or archives
+                  for student access.
+                </div>
               </div>
             </div>
-          </div>
 
-          <SheetFooter className="mt-auto border-t px-6 py-4 sm:flex-row sm:justify-end">
-            <SheetClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </SheetClose>
-            <Button
-              type="submit"
-              disabled={
-                !materialForm.title.trim() ||
-                !selectedMaterialSubject ||
-                (!editingRecord && !materialForm.file) ||
-                uploadMaterialMutation.isPending ||
+            <SheetFooter className="mt-auto border-t px-6 py-4 sm:flex-row sm:justify-end">
+              <SheetClose asChild>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
+              </SheetClose>
+              <Button
+                type="submit"
+                disabled={
+                  !materialForm.title.trim() ||
+                  !selectedMaterialSubject ||
+                  (!editingRecord && !materialForm.file) ||
+                  uploadMaterialMutation.isPending ||
+                  createMaterialMutation.isPending ||
+                  updateMaterialMutation.isPending
+                }
+              >
+                {uploadMaterialMutation.isPending ||
                 createMaterialMutation.isPending ||
                 updateMaterialMutation.isPending
-              }
-            >
-              {uploadMaterialMutation.isPending ||
-              createMaterialMutation.isPending ||
-              updateMaterialMutation.isPending
-                ? "Saving..."
-                : editingRecord
-                  ? "Save Changes"
-                  : "Upload Material"}
-            </Button>
-          </SheetFooter>
-        </form>
-      </SheetContent>
-    </Sheet>
-    <Dialog open={Boolean(previewRecord)} onOpenChange={() => setPreviewRecord(null)}>
-      <DialogContent className="max-h-[90vh] max-w-5xl! border-0! overflow-hidden p-0!">
-        <DialogHeader className="border-b px-6 py-4">
-          <DialogTitle>{previewRecord?.title}</DialogTitle>
-          <DialogDescription>
-            {previewRecord?.subject} - {previewRecord?.fileName}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="h-[70vh] bg-muted">
-          {previewRecord?.fileUrl ? (
-            <iframe
-              src={previewRecord.fileUrl}
-              title={previewRecord.title}
-              className="h-full w-full border-0"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              No preview available.
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+                  ? "Saving..."
+                  : editingRecord
+                    ? "Save Changes"
+                    : "Upload Material"}
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
+      <Dialog
+        open={Boolean(previewRecord)}
+        onOpenChange={() => setPreviewRecord(null)}
+      >
+        <DialogContent className="max-h-[90vh] max-w-5xl! border-0! overflow-hidden p-0!">
+          <DialogHeader className="border-b px-6 py-4">
+            <DialogTitle>{previewRecord?.title}</DialogTitle>
+            <DialogDescription>
+              {previewRecord?.subject} - {previewRecord?.fileName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="h-[70vh] bg-muted">
+            {previewRecord?.fileUrl ? (
+              <iframe
+                src={previewRecord.fileUrl}
+                title={previewRecord.title}
+                className="h-full w-full border-0"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                No preview available.
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

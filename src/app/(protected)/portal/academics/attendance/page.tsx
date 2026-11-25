@@ -1,7 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   CalendarDays,
   CheckCircle2,
@@ -14,14 +14,6 @@ import {
 import type { Row } from "@tanstack/react-table";
 
 import { GlobalDataTable } from "@/components/DataTable";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -42,97 +34,96 @@ import {
   type AttendanceStatus,
 } from "./_components/columns";
 import { StatCard } from "./_components/stat-card";
+import {
+  useSaveSeminaryAttendanceMutation,
+  useSeminaryAttendanceQuery,
+  useSeminaryCoursesQuery,
+  useSeminaryStudentsQuery,
+} from "@/features/seminary/seminary.hooks";
+import { useToast } from "@/hooks/use-toast";
+import { useCurrentUserQuery } from "@/features/auth/auth.hooks";
 
 type AcademicYearOption = "2024-2025" | "2025-2026";
-type ClassOption = "First Year Theology" | "Second Year Theology" | "Master of Divinity Year I";
-type SectionOption = "A" | "B";
 
 const academicYearOptions: AcademicYearOption[] = ["2024-2025", "2025-2026"];
-const classOptions: ClassOption[] = [
-  "First Year Theology",
-  "Second Year Theology",
-  "Master of Divinity Year I",
-];
-const sectionOptions: SectionOption[] = ["A", "B"];
+const programLabel = (program: string) =>
+  program
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
 
-const initialAttendanceData: AttendanceRecord[] = [
-  {
-    id: "1",
-    order: 1,
-    rollNo: "SEM-2401",
-    studentName: "John Mark Dela Cruz",
-    status: "Present",
-    remarks: "",
-  },
-  {
-    id: "2",
-    order: 2,
-    rollNo: "SEM-2402",
-    studentName: "Paolo Miguel Santos",
-    status: "Present",
-    remarks: "",
-  },
-  {
-    id: "3",
-    order: 3,
-    rollNo: "SEM-2403",
-    studentName: "Christian Gabriel Reyes",
-    status: "Absent",
-    remarks: "Medical consultation",
-  },
-  {
-    id: "4",
-    order: 4,
-    rollNo: "SEM-2404",
-    studentName: "Noel Francis Bautista",
-    status: "Late",
-    remarks: "Arrived after morning prayer",
-  },
-  {
-    id: "5",
-    order: 5,
-    rollNo: "SEM-2405",
-    studentName: "Jose Antonio Mendoza",
-    status: "Present",
-    remarks: "",
-  },
-  {
-    id: "6",
-    order: 6,
-    rollNo: "SEM-2406",
-    studentName: "Miguel Lorenzo Navarro",
-    status: "Present",
-    remarks: "",
-  },
-  {
-    id: "7",
-    order: 7,
-    rollNo: "SEM-2407",
-    studentName: "Raphael Benedict Cruz",
-    status: "Absent",
-    remarks: "Pastoral assignment",
-  },
-  {
-    id: "8",
-    order: 8,
-    rollNo: "SEM-2408",
-    studentName: "Adrian Paul Villanueva",
-    status: "Present",
-    remarks: "",
-  },
-];
 
 const Page = () => {
-  const [academicYear, setAcademicYear] = useState<AcademicYearOption>("2024-2025");
-  const [className, setClassName] = useState<ClassOption>("First Year Theology");
-  const [section, setSection] = useState<SectionOption>("A");
+  const { toast } = useToast();
+  const [academicYear, setAcademicYear] =
+    useState<AcademicYearOption>("2024-2025");
+  const [program, setProgram] = useState("");
+  const [courseId, setCourseId] = useState("");
   const [attendanceDate, setAttendanceDate] = useState("2026-05-02");
-  const [records, setRecords] = useState<AttendanceRecord[]>(initialAttendanceData);
+  const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [monthlyDialogOpen, setMonthlyDialogOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<AttendanceRecord | null>(null);
+  const [selectedStudent, setSelectedStudent] =
+    useState<AttendanceRecord | null>(null);
+  const coursesQuery = useSeminaryCoursesQuery({
+    limit: 100,
+    status: "ACTIVE",
+  });
+  const studentsQuery = useSeminaryStudentsQuery({ limit: 200 });
+  const availableCourses = coursesQuery.data?.data ?? [];
+  const programs = Array.from(
+    new Set([
+      ...availableCourses.map((course) => course.program),
+      ...(studentsQuery.data?.data ?? [])
+        .map((student) => student.programLevel)
+        .filter((program): program is NonNullable<typeof program> =>
+          Boolean(program),
+        ),
+    ]),
+  );
+  const programCourses = availableCourses.filter(
+    (course) => course.program === program,
+  );
+  const attendanceQuery = useSeminaryAttendanceQuery(
+    { academicYear, program, courseId, date: attendanceDate },
+    { enabled: Boolean(program && courseId) },
+  );
+  const saveAttendance = useSaveSeminaryAttendanceMutation();
+  const { data: currentUser } = useCurrentUserQuery();
+  const canManageAttendance =
+    currentUser?.role === "INSTRUCTOR" ||
+    (currentUser?.role === "ADMIN" && currentUser.position === "REGISTRAR");
 
-  const presentCount = records.filter((record) => record.status === "Present").length;
-  const absentCount = records.filter((record) => record.status === "Absent").length;
+  useEffect(() => {
+    if (!program && programs[0]) setProgram(programs[0]);
+  }, [program, programs]);
+
+  useEffect(() => {
+    if (!programCourses.some((course) => course.id === courseId)) {
+      setCourseId(programCourses[0]?.id ?? "");
+    }
+  }, [courseId, programCourses]);
+
+  useEffect(() => {
+    if (!attendanceQuery.data) return;
+    setRecords(
+      attendanceQuery.data.data.map((record, index) => ({
+        id: record.applicationId,
+        applicationId: record.applicationId,
+        order: index + 1,
+        rollNo: record.rollNo,
+        studentName: record.studentName,
+        status: (record.status[0] +
+          record.status.slice(1).toLowerCase()) as AttendanceStatus,
+        remarks: record.remarks,
+      })),
+    );
+  }, [attendanceQuery.data]);
+
+  const presentCount = records.filter(
+    (record) => record.status === "Present",
+  ).length;
+  const absentCount = records.filter(
+    (record) => record.status === "Absent",
+  ).length;
   const lateCount = records.filter((record) => record.status === "Late").length;
   const totalStudents = records.length;
 
@@ -186,12 +177,14 @@ const Page = () => {
         setSelectedStudent(record);
         setMonthlyDialogOpen(true);
       }}
+      readOnly={!canManageAttendance}
     />
   );
 
   const columns = getColumns({
     onChangeStatus: handleChangeStatus,
     onChangeRemarks: handleChangeRemarks,
+    readOnly: !canManageAttendance,
   });
 
   return (
@@ -202,24 +195,6 @@ const Page = () => {
             Attendance
           </h1>
         </div>
-
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/admin/dashboard">Dashboard</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Attendance</BreadcrumbPage>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Student Attendance</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -257,10 +232,14 @@ const Page = () => {
         <CardContent className="space-y-5">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Academic Year</p>
+              <p className="text-sm font-medium text-foreground">
+                Academic Year
+              </p>
               <Select
                 value={academicYear}
-                onValueChange={(value) => setAcademicYear(value as AcademicYearOption)}
+                onValueChange={(value) =>
+                  setAcademicYear(value as AcademicYearOption)
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select academic year" />
@@ -276,18 +255,15 @@ const Page = () => {
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Class</p>
-              <Select
-                value={className}
-                onValueChange={(value) => setClassName(value as ClassOption)}
-              >
+              <p className="text-sm font-medium text-foreground">Program</p>
+              <Select value={program} onValueChange={setProgram}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue placeholder="Select program" />
                 </SelectTrigger>
                 <SelectContent>
-                  {classOptions.map((option) => (
+                  {programs.map((option) => (
                     <SelectItem key={option} value={option}>
-                      {option}
+                      {programLabel(option)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -295,22 +271,34 @@ const Page = () => {
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Section</p>
+              <p className="text-sm font-medium text-foreground">Course</p>
               <Select
-                value={section}
-                onValueChange={(value) => setSection(value as SectionOption)}
+                value={courseId}
+                onValueChange={setCourseId}
+                disabled={!programCourses.length}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select section" />
+                  <SelectValue
+                    placeholder={
+                      coursesQuery.isLoading
+                        ? "Loading courses…"
+                        : "Select course"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {sectionOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      Section {option}
+                  {programCourses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.courseCode} — {course.courseName}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {!coursesQuery.isLoading && program && !programCourses.length && (
+                <p className="text-xs text-muted-foreground">
+                  No active courses are configured for this program yet.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -326,18 +314,65 @@ const Page = () => {
             </div>
 
             <div className="flex items-end">
-              <Button className="w-full">
+              <Button
+                className="w-full"
+                disabled={
+                  !canManageAttendance ||
+                  !program ||
+                  !courseId ||
+                  saveAttendance.isPending ||
+                  records.length === 0 ||
+                  records.some((record) => !record.applicationId)
+                }
+                onClick={() =>
+                  saveAttendance.mutate(
+                    {
+                      academicYear,
+                      program,
+                      courseId,
+                      date: attendanceDate,
+                      entries: records.map((record) => ({
+                        applicationId: record.applicationId,
+                        status: record.status.toUpperCase() as
+                          | "PRESENT"
+                          | "ABSENT"
+                          | "LATE",
+                        remarks: record.remarks,
+                      })),
+                    },
+                    {
+                      onSuccess: () =>
+                        toast({
+                          title: "Attendance saved",
+                          variant: "success",
+                        }),
+                      onError: () =>
+                        toast({
+                          title: "Unable to save attendance",
+                          variant: "error",
+                        }),
+                    },
+                  )
+                }
+              >
                 <Save className="size-4" />
                 Save Attendance
               </Button>
             </div>
           </div>
 
+          {!canManageAttendance && (
+            <p className="text-sm text-muted-foreground">
+              Only instructors and the Registrar can change or save attendance.
+            </p>
+          )}
+
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
                 variant="outline"
                 className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                disabled={!canManageAttendance}
                 onClick={() => handleMarkAll("Present")}
               >
                 <CheckCircle2 className="size-4" />
@@ -346,6 +381,7 @@ const Page = () => {
               <Button
                 variant="outline"
                 className="border-red-200 text-red-700 hover:bg-red-50"
+                disabled={!canManageAttendance}
                 onClick={() => handleMarkAll("Absent")}
               >
                 <CircleMinus className="size-4" />
@@ -354,6 +390,7 @@ const Page = () => {
               <Button
                 variant="outline"
                 className="border-amber-200 text-amber-700 hover:bg-amber-50"
+                disabled={!canManageAttendance}
                 onClick={() => handleMarkAll("Late")}
               >
                 <Clock3 className="size-4" />
@@ -383,10 +420,13 @@ const Page = () => {
                     key={status}
                     variant="outline"
                     size="xs"
+                    disabled={!canManageAttendance}
                     onClick={() => {
                       setRecords((current) =>
                         current.map((record) =>
-                          selectedRows.some((selected) => selected.id === record.id)
+                          selectedRows.some(
+                            (selected) => selected.id === record.id,
+                          )
                             ? { ...record, status }
                             : record,
                         ),
@@ -414,6 +454,7 @@ const Page = () => {
         open={monthlyDialogOpen}
         onOpenChange={setMonthlyDialogOpen}
         student={selectedStudent}
+        month={attendanceDate.slice(0, 7)}
       />
     </section>
   );

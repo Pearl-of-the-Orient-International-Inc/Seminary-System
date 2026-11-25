@@ -1157,6 +1157,23 @@ export interface SeminaryInstructorInviteResponse {
   message: string;
 }
 
+export interface SeminaryPublicInstructor {
+  id: string;
+  name: string;
+  professionalTitle: string;
+  rank: SeminaryInstructorRank;
+  teachingPrograms: SeminaryProgramLevel[];
+  areasOfExpertise: string[];
+  biography: string;
+  formalPhotoUrl: string;
+}
+
+export interface SeminaryPublicInstructorsResponse {
+  code: string;
+  message: string;
+  data: SeminaryPublicInstructor[];
+}
+
 export interface SeminaryAcademicYearsResponse {
   code: string;
   message: string;
@@ -1247,3 +1264,12 @@ export interface SeminaryCredentialDocumentsResponse {
   message: string;
   data: SeminaryCredentialDocument[];
 }
+
+export interface SeminaryCredentialDocumentsPagedResponse extends SeminaryCredentialDocumentsResponse {
+  meta: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export interface SeminaryAttendanceRecord { applicationId: string; rollNo: string; studentName: string; status: "PRESENT" | "ABSENT" | "LATE"; remarks: string; }
+export interface SeminaryAttendanceResponse { code: string; message: string; data: SeminaryAttendanceRecord[]; }
+export interface SeminaryAttendanceHistoryEntry { date: string; status: "PRESENT" | "ABSENT" | "LATE"; remarks: string; }
+export interface SeminaryAttendanceHistoryResponse { code: string; message: string; data: SeminaryAttendanceHistoryEntry[]; }

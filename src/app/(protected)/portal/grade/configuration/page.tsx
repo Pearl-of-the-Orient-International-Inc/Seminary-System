@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import {
   BadgeCheck,
   BookCheck,
@@ -11,14 +10,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -202,11 +193,6 @@ const Page = () => {
   const weightProfile = configuration.weightProfile ?? "Standard Coursework";
   const criteriaWeights =
     configuration.criteriaWeights ?? defaultCriteriaWeights;
-  const criteriaTotal =
-    criteriaWeights.attendance +
-    criteriaWeights.coursework +
-    criteriaWeights.character +
-    criteriaWeights.exam;
   const saveStatus = updateConfigurationMutation.isPending
     ? "Saving..."
     : lastSavedAt
@@ -217,7 +203,7 @@ const Page = () => {
     <section className="space-y-6 p-10">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="space-y-2">
-          <h1 className="font-serif text-4xl text-emerald-950 dark:text-emerald-50">
+          <h1 className="font-serif text-4xl text-green-950 dark:text-green-50">
             Grade Configuration
           </h1>
           <p className="text-sm leading-6 text-muted-foreground">
@@ -227,22 +213,8 @@ const Page = () => {
         </div>
 
         <div className="flex flex-col items-start gap-3 xl:items-end">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/admin/dashboard">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Configuration</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-950/10 bg-emerald-950/3 px-3 py-1 text-xs text-muted-foreground dark:border-emerald-100/10">
-            <CheckCircle2 className="size-3.5 text-emerald-700" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-green-950/10 bg-green-950/3 px-3 py-1 text-xs text-muted-foreground dark:border-green-100/10">
+            <CheckCircle2 className="size-3.5 text-green-700" />
             {saveStatus}
           </div>
         </div>
@@ -252,9 +224,9 @@ const Page = () => {
         <StatCard
           title="Passing Equivalent"
           value={passingEquivalent}
-          description="Current institutional threshold"
+          description="Institutional threshold"
           icon={<BadgeCheck className="size-6" />}
-          accentClassName="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+          accentClassName="bg-green-500/10 text-green-700 dark:bg-green-400/10 dark:text-green-300"
         />
         <StatCard
           title="Release Window"
@@ -282,17 +254,17 @@ const Page = () => {
       <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
         <GradingScaleCard rows={gradeScale} />
 
-        <Card className="overflow-hidden gap-0! pt-0! border-emerald-950/10 shadow-sm dark:border-emerald-100/10">
-          <div className="border-b border-emerald-950/10 bg-linear-to-r from-emerald-950 to-emerald-900 px-6 py-5 dark:border-emerald-100/10">
-            <div className="inline-flex items-center gap-2 text-xs uppercase text-emerald-100/70">
+        <Card className="overflow-hidden gap-0! pt-0! border-green-950/10 shadow-sm dark:border-green-100/10">
+          <div className="border-b border-green-950/10 bg-linear-to-r from-green-950 to-green-900 px-6 py-5 dark:border-green-100/10">
+            <div className="inline-flex items-center gap-2 text-xs uppercase text-green-100/70">
               <Filter className="size-3.5" />
               Academic Rules
             </div>
             <h2 className="mt-2 text-2xl font-semibold text-white">
               Configuration Controls
             </h2>
-            <p className="mt-1 text-sm text-emerald-50/80">
-              Manage release timing, completion deadlines, and faculty permissions.
+            <p className="mt-1 text-sm text-green-50/80">
+              Manage release timing, completion deadlines, and permissions.
             </p>
           </div>
 
@@ -371,24 +343,16 @@ const Page = () => {
               </Field>
             </div>
 
-            <div className="space-y-4 rounded-2xl border border-emerald-950/10 bg-emerald-950/3 p-5 dark:border-emerald-100/10 dark:bg-emerald-100/4">
+            <div className="space-y-4 rounded-2xl border border-green-950/10 bg-green-950/3 p-5 dark:border-green-100/10 dark:bg-green-100/4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h3 className="font-semibold text-emerald-950 dark:text-emerald-50">
+                  <h3 className="font-semibold text-green-950 dark:text-green-50">
                     Criteria Weights
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    These percentages compute grade equivalents in grade records.
+                    These percentages compute grade equivalents in grade
+                    records.
                   </p>
-                </div>
-                <div
-                  className={`rounded-full px-3 py-1 text-xs font-semibold tabular-nums ${
-                    criteriaTotal === 100
-                      ? "bg-emerald-700/10 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200"
-                      : "bg-destructive/10 text-destructive"
-                  }`}
-                >
-                  Total: {criteriaTotal}%
                 </div>
               </div>
 
@@ -406,7 +370,9 @@ const Page = () => {
                   />
                 </Field>
                 <Field>
-                  <FieldLabel className="min-h-5">Reports &amp; Activities (%)</FieldLabel>
+                  <FieldLabel className="min-h-5">
+                    Reports &amp; Activities (%)
+                  </FieldLabel>
                   <Input
                     type="number"
                     min={0}
@@ -444,18 +410,22 @@ const Page = () => {
               </div>
             </div>
 
-            <div className="space-y-4 rounded-2xl border border-emerald-950/10 bg-emerald-950/3 p-5 dark:border-emerald-100/10 dark:bg-emerald-100/4">
+            <div className="space-y-4 rounded-2xl border border-green-950/10 bg-green-950/3 p-5 dark:border-green-100/10 dark:bg-green-100/4">
               <div className="space-y-1">
-                <h3 className="font-semibold text-emerald-950 dark:text-emerald-50">
+                <h3 className="font-semibold text-green-950 dark:text-green-50">
                   Workflow Toggles
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Enable or disable core registrar controls for grade publication.
+                  Enable or disable core registrar controls for grade
+                  publication.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <Field orientation="horizontal" className="items-center justify-between">
+                <Field
+                  orientation="horizontal"
+                  className="items-center justify-between"
+                >
                   <div>
                     <FieldLabel>Approval Workflow</FieldLabel>
                     <FieldDescription>
@@ -470,7 +440,10 @@ const Page = () => {
                   />
                 </Field>
 
-                <Field orientation="horizontal" className="items-center justify-between">
+                <Field
+                  orientation="horizontal"
+                  className="items-center justify-between"
+                >
                   <div>
                     <FieldLabel>Allow Faculty Override</FieldLabel>
                     <FieldDescription>
@@ -485,7 +458,10 @@ const Page = () => {
                   />
                 </Field>
 
-                <Field orientation="horizontal" className="items-center justify-between">
+                <Field
+                  orientation="horizontal"
+                  className="items-center justify-between"
+                >
                   <div>
                     <FieldLabel>Auto Publish Approved Grades</FieldLabel>
                     <FieldDescription>
@@ -500,11 +476,15 @@ const Page = () => {
                   />
                 </Field>
 
-                <Field orientation="horizontal" className="items-center justify-between">
+                <Field
+                  orientation="horizontal"
+                  className="items-center justify-between"
+                >
                   <div>
                     <FieldLabel>Show Conditional Remark</FieldLabel>
                     <FieldDescription>
-                      Include the conditional remark for borderline passing outcomes.
+                      Include the conditional remark for borderline passing
+                      outcomes.
                     </FieldDescription>
                   </div>
                   <Switch

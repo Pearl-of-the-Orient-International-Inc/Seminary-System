@@ -695,6 +695,13 @@ export const useSeminaryInstructorsQuery = (
     staleTime: 30_000,
   });
 
+export const usePublicSeminaryInstructorsQuery = () =>
+  useQuery({
+    queryKey: ["seminary", "public", "instructors"],
+    queryFn: seminaryApi.getPublicSeminaryInstructors,
+    staleTime: 60_000,
+  });
+
 export const useSeminaryInstructorQuery = (
   id: string,
   options?: { enabled?: boolean },
@@ -1099,5 +1106,18 @@ export const useSeminaryCredentialDocumentsQuery = (
     enabled: options?.enabled ?? true,
     staleTime: 30_000,
   });
+
+export const useAllSeminaryCredentialDocumentsQuery = (
+  params?: Parameters<typeof seminaryApi.getAllSeminaryCredentialDocuments>[0],
+) => useQuery({ queryKey: ["seminary", "credential-documents", params], queryFn: () => seminaryApi.getAllSeminaryCredentialDocuments(params), staleTime: 30_000 });
+
+export const useGenerateSeminaryTranscriptBatchMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: seminaryApi.generateSeminaryTranscriptBatch, throwOnError: false, onSuccess: () => queryClient.invalidateQueries({ queryKey: ["seminary", "credential-documents"] }) });
+};
+
+export const useSeminaryAttendanceQuery = (params: Parameters<typeof seminaryApi.getSeminaryAttendance>[0], options?: { enabled?: boolean }) => useQuery({ queryKey: ["seminary", "attendance", params], queryFn: () => seminaryApi.getSeminaryAttendance(params), enabled: options?.enabled ?? true, staleTime: 10_000 });
+export const useSeminaryAttendanceHistoryQuery = (params: Parameters<typeof seminaryApi.getSeminaryAttendanceHistory>[0], options?: { enabled?: boolean }) => useQuery({ queryKey: ["seminary", "attendance", "history", params], queryFn: () => seminaryApi.getSeminaryAttendanceHistory(params), enabled: options?.enabled ?? Boolean(params.applicationId), staleTime: 10_000 });
+export const useSaveSeminaryAttendanceMutation = () => { const queryClient = useQueryClient(); return useMutation({ mutationFn: seminaryApi.saveSeminaryAttendance, onSuccess: () => queryClient.invalidateQueries({ queryKey: ["seminary", "attendance"] }) }); };
 
 export { toApiError };

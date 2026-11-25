@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   BookOpen,
@@ -12,14 +11,6 @@ import {
 import type { Row } from "@tanstack/react-table";
 
 import { GlobalDataTable } from "@/components/DataTable";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -210,7 +201,7 @@ const Page = () => {
         description: "Active assignments",
         icon: <CheckCircle2 className="size-6" />,
         accentClassName:
-          "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
+          "bg-green-500/10 text-green-700 dark:bg-green-400/10 dark:text-green-300",
       },
       {
         title: "Due This Week",
@@ -354,24 +345,6 @@ const Page = () => {
             Create, publish, and manage student assignments.
           </p>
         </div>
-
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/admin/dashboard">Dashboard</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Learning Management System</BreadcrumbPage>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Assignments</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -390,7 +363,7 @@ const Page = () => {
                 <p className="text-sm font-medium text-slate-500">
                   {stat.title}
                 </p>
-                <p className="text-4xl font-semibold tracking-tight text-slate-900">
+                <p className="text-3xl font-semibold tracking-tight text-slate-900">
                   {stat.value}
                 </p>
                 <p className="text-xs text-slate-500">{stat.description}</p>
@@ -678,7 +651,7 @@ const PreviewRow = ({
   <div className="flex items-start justify-between gap-4 px-4 py-3 text-sm">
     <p className="text-muted-foreground">{label}</p>
     <div className="max-w-64 text-right font-medium">
-      {badge ? <Badge>{value}</Badge> : <span className="break-words">{value}</span>}
+      {badge ? <Badge>{value}</Badge> : <span className="wrap-break-word">{value}</span>}
     </div>
   </div>
 );

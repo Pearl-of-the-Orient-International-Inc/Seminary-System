@@ -13,14 +13,6 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -139,12 +131,13 @@ const equivalentFromPercentage = (
   percentage: number,
   scale: SeminaryGradeScaleRow[] | undefined,
 ) => {
+  const configuredPercentage = Math.round(percentage);
   const row = (scale ?? []).find((scaleRow) => {
     const range = parseRange(scaleRow.percentageRange);
-    return percentage >= range.min && percentage <= range.max;
+    return configuredPercentage >= range.min && configuredPercentage <= range.max;
   });
 
-  return row?.equivalent ?? (percentage >= 75 ? "3.00" : "5.00");
+  return row?.equivalent ?? (configuredPercentage >= 75 ? "3.00" : "5.00");
 };
 
 const remarkFromGrade = (
@@ -483,7 +476,7 @@ const Page = () => {
               Back to grade records
             </Link>
           </Button>
-          <h1 className="font-serif text-4xl text-emerald-950 dark:text-emerald-50">
+          <h1 className="font-serif text-4xl text-green-950 dark:text-green-50">
             {isCreate ? "Create Grade Records" : "Update Grade Record"}
           </h1>
           <p className="text-sm leading-6 text-muted-foreground">
@@ -491,28 +484,10 @@ const Page = () => {
           </p>
         </div>
 
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/admin/dashboard">Dashboard</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/portal/grade/records">Grade Records</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{isCreate ? "Create" : "Edit"}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        
       </div>
 
-      <Card className="border-emerald-950/10 shadow-sm">
+      <Card className="border-green-950/10 shadow-sm">
         <CardContent className="space-y-6">
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3 text-sm">
@@ -530,7 +505,7 @@ const Page = () => {
           </div>
 
           {step === 0 ? (
-            <div className="grid gap-5 lg:grid-cols-2">
+            <div className="grid gap-5 lg:grid-cols-3">
               <Field>
                 <FieldLabel>Entry Mode</FieldLabel>
                 <Select
@@ -585,9 +560,9 @@ const Page = () => {
                 </Select>
               </Field>
 
-              <div className="rounded-md border bg-muted/30 p-4 lg:col-span-2">
+              <div className="rounded-md border bg-muted/30 p-4 lg:col-span-3">
                 <div className="flex items-center gap-2 font-medium">
-                  <UsersRound className="size-4 text-emerald-700" />
+                  <UsersRound className="size-4 text-green-700" />
                   Configuration Match
                 </div>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">

@@ -410,7 +410,7 @@ const Page = () => {
       <section className="min-w-0 max-w-full space-y-6 overflow-x-hidden p-10">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-2">
-            <h1 className="font-serif text-4xl text-emerald-950 dark:text-emerald-50">
+            <h1 className="font-serif text-4xl text-green-950 dark:text-green-50">
               Students
             </h1>
             <p className="text-sm max-w-2xl text-muted-foreground">
@@ -444,7 +444,7 @@ const Page = () => {
             value={totalStudents}
             description="Across academic years"
             icon={<UsersRound className="size-6" />}
-            accentClassName="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+            accentClassName="bg-green-500/10 text-green-700 dark:bg-green-400/10 dark:text-green-300"
           />
           <StatCard
             title="Active Students"
@@ -469,26 +469,26 @@ const Page = () => {
           />
         </div>
 
-        <Card className="min-w-0 overflow-hidden pt-0! border-emerald-950/10 shadow-sm dark:border-emerald-100/10">
-          <div className="border-b border-emerald-950/10 bg-linear-to-r from-emerald-950 to-emerald-900 px-6 py-5 dark:border-emerald-100/10">
+        <Card className="min-w-0 overflow-hidden pt-0! border-green-950/10 shadow-sm dark:border-green-100/10">
+          <div className="border-b border-green-950/10 bg-linear-to-r from-green-950 to-green-900 px-6 py-5 dark:border-green-100/10">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 text-xs uppercase text-emerald-100/70">
+                <div className="inline-flex items-center gap-2 text-xs uppercase text-green-100/70">
                   <ShieldCheck className="size-3.5" />
                   Student Registry
                 </div>
                 <h2 className="text-2xl font-semibold text-white">
                   Enrollment Directory
                 </h2>
-                <p className="max-w-2xl text-sm text-emerald-50/80">
+                <p className="max-w-2xl text-sm text-green-50/80">
                   Search, filter, and review student records while keeping the
                   layout aligned with the rest of the seminary.
                 </p>
               </div>
 
-              <div className="grid gap-3 text-sm text-emerald-50/85 sm:grid-cols-3">
+              <div className="grid gap-3 text-sm text-green-50/85 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 backdrop-blur-sm">
-                  <div className="text-xs uppercase text-emerald-100/65">
+                  <div className="text-xs uppercase text-green-100/65">
                     Certificate
                   </div>
                   <div className="mt-1 text-xl font-semibold">
@@ -500,7 +500,7 @@ const Page = () => {
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 backdrop-blur-sm">
-                  <div className="text-xs uppercase text-emerald-100/65">
+                  <div className="text-xs uppercase text-green-100/65">
                     Bachelor
                   </div>
                   <div className="mt-1 text-xl font-semibold">
@@ -512,7 +512,7 @@ const Page = () => {
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 backdrop-blur-sm">
-                  <div className="text-xs uppercase text-emerald-100/65">
+                  <div className="text-xs uppercase text-green-100/65">
                     Higher
                   </div>
                   <div className="mt-1 text-xl font-semibold">

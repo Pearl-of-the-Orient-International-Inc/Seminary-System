@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   BookMarked,
@@ -14,14 +13,6 @@ import {
 import type { Row } from "@tanstack/react-table";
 
 import { GlobalDataTable } from "@/components/DataTable";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -212,32 +203,14 @@ const Page = () => {
       <section className="space-y-6 p-10">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-2">
-            <h1 className="font-serif text-4xl text-emerald-950 dark:text-emerald-50">
+            <h1 className="font-serif text-4xl text-green-950 dark:text-green-50">
               Grade Records
             </h1>
             <p className="text-sm leading-6 text-muted-foreground">
-              Encode raw points, review computed equivalents, and manage
-              student grade records from one workspace.
+              Encode raw points, review computed equivalents, and manage student
+              grade records from one workspace.
             </p>
           </div>
-
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/admin/dashboard">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Grades</BreadcrumbPage>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Records</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -246,7 +219,7 @@ const Page = () => {
             value={totalRecords}
             description="Encoded grade entries"
             icon={<BookMarked className="size-6" />}
-            accentClassName="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+            accentClassName="bg-green-500/10 text-green-700 dark:bg-green-400/10 dark:text-green-300"
           />
           <StatCard
             title="Completed"
@@ -273,14 +246,14 @@ const Page = () => {
 
         <GradeEncodingWorkspace />
 
-        <Card className="overflow-hidden pt-0! border-emerald-950/10 shadow-sm dark:border-emerald-100/10">
-          <div className="border-b border-emerald-950/10 bg-linear-to-r from-emerald-950 to-emerald-900 px-6 py-5 dark:border-emerald-100/10">
+        <Card className="overflow-hidden pt-0! border-green-950/10 shadow-sm dark:border-green-100/10">
+          <div className="border-b border-green-950/10 bg-linear-to-r from-green-950 to-green-900 px-6 py-5 dark:border-green-100/10">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">
                 <h2 className="text-2xl font-semibold text-white">
                   Academic Record Directory
                 </h2>
-                <p className="text-sm text-emerald-50/80">
+                <p className="text-sm text-green-50/80">
                   Search and filter posted records from instructor grade
                   entries.
                 </p>

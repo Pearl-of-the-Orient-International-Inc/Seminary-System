@@ -32,13 +32,13 @@ type InstructorDetailsDialogProps = {
 };
 
 const sectionClassName =
-  "border-b border-emerald-950/10 pb-5 last:border-b-0 dark:border-emerald-100/10";
+  "border-b border-green-950/10 pb-5 last:border-b-0 dark:border-green-100/10";
 
 const statClassName =
-  "rounded-xl border border-emerald-950/10 bg-emerald-950/[0.03] p-4 dark:border-emerald-100/10 dark:bg-emerald-100/[0.04]";
+  "rounded-xl border border-green-950/10 bg-green-950/[0.03] p-4 dark:border-green-100/10 dark:bg-green-100/[0.04]";
 
 const listItemClassName =
-  "border-b border-emerald-950/10 py-3 last:border-b-0 dark:border-emerald-100/10";
+  "border-b border-green-950/10 py-3 last:border-b-0 dark:border-green-100/10";
 
 const getInitials = (name: string) =>
   name
@@ -56,14 +56,14 @@ export const InstructorDetailsDialog = ({
   <Sheet open={open} onOpenChange={onOpenChange}>
     <SheetContent
       side="right"
-      className="w-full overflow-y-auto border-emerald-950/10 p-0 max-w-4xl! dark:border-emerald-100/10"
+      className="w-full overflow-y-auto p-0 max-w-5xl! border-none! shadow-none!"
       showCloseButton={false}
     >
       {instructor ? (
         <>
-          <SheetHeader className="border-b border-emerald-950/10 bg-emerald-950 px-6 py-6 text-left dark:border-emerald-100/10">
+          <SheetHeader className="border-b border-green-950/10 bg-green-950 px-6 py-6 text-left dark:border-green-100/10">
             <div className="grid gap-5 md:grid-cols-[160px_1fr] md:items-center">
-              <div className="aspect-4/5 overflow-hidden rounded-xl border border-white/15 bg-white/10">
+              <div className="aspect-4/5 overflow-hidden rounded-xl">
                 {instructor.formalPhotoUrl ? (
                   <div
                     role="img"
@@ -74,7 +74,7 @@ export const InstructorDetailsDialog = ({
                     }}
                   />
                 ) : (
-                  <div className="flex size-full items-center justify-center bg-emerald-900 text-5xl font-semibold text-emerald-50">
+                  <div className="flex size-full items-center justify-center bg-green-900 text-5xl font-semibold text-green-50">
                     {getInitials(instructor.name)}
                   </div>
                 )}
@@ -92,13 +92,13 @@ export const InstructorDetailsDialog = ({
                 <SheetTitle className="font-serif text-3xl text-white md:text-4xl">
                   {instructor.name}
                 </SheetTitle>
-                <SheetDescription className="mt-2 text-sm text-emerald-50/85">
+                <SheetDescription className="mt-2 text-sm text-green-50/85">
                   {instructor.facultyId} - {instructor.rank}
                 </SheetDescription>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/85">
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-green-50/85">
                   {instructor.professionalTitle}
                 </p>
-                <div className="mt-5 grid gap-2 text-sm text-emerald-50/90 sm:grid-cols-2">
+                <div className="mt-5 grid gap-2 text-sm text-green-50/90 sm:grid-cols-2">
                   <div className="flex min-w-0 items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
                     <Mail className="size-4 shrink-0" />
                     <span className="truncate">{instructor.email}</span>
@@ -118,7 +118,7 @@ export const InstructorDetailsDialog = ({
                 <div className="text-muted-foreground text-xs uppercase">
                   Score
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-emerald-950 dark:text-emerald-50">
+                <div className="mt-1 text-2xl font-semibold text-green-950 dark:text-green-50">
                   {instructor.evaluation.totalScore}%
                 </div>
               </div>
@@ -126,7 +126,7 @@ export const InstructorDetailsDialog = ({
                 <div className="text-muted-foreground text-xs uppercase">
                   Load
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-emerald-950 dark:text-emerald-50">
+                <div className="mt-1 text-2xl font-semibold text-green-950 dark:text-green-50">
                   {instructor.loadUnits}
                   <span className="ml-1 text-sm font-medium text-muted-foreground">
                     units
@@ -137,7 +137,7 @@ export const InstructorDetailsDialog = ({
                 <div className="text-muted-foreground text-xs uppercase">
                   Experience
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-emerald-950 dark:text-emerald-50">
+                <div className="mt-1 text-2xl font-semibold text-green-950 dark:text-green-50">
                   {instructor.ministerialExperienceYears}
                   <span className="ml-1 text-sm font-medium text-muted-foreground">
                     years
@@ -148,7 +148,7 @@ export const InstructorDetailsDialog = ({
                 <div className="text-muted-foreground text-xs uppercase">
                   Award
                 </div>
-                <div className="mt-2 text-sm font-semibold text-emerald-950 dark:text-emerald-50">
+                <div className="mt-2 text-sm font-semibold text-green-950 dark:text-green-50">
                   {instructor.evaluation.award}
                 </div>
               </div>
@@ -157,7 +157,7 @@ export const InstructorDetailsDialog = ({
             <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
               <aside className="space-y-5">
                 <div className={sectionClassName}>
-                  <div className="mb-2 flex items-center gap-2 font-medium text-emerald-950 dark:text-emerald-50">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-green-950 dark:text-green-50">
                     <UserRound className="size-4" />
                     Faculty Profile
                   </div>
@@ -214,7 +214,7 @@ export const InstructorDetailsDialog = ({
                 </div>
 
                 <div className={sectionClassName}>
-                  <div className="mb-2 flex items-center gap-2 font-medium text-emerald-950 dark:text-emerald-50">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-green-950 dark:text-green-50">
                     <BookOpenText className="size-4" />
                     Teaching Snapshot
                   </div>
@@ -226,7 +226,9 @@ export const InstructorDetailsDialog = ({
                       </div>
                     </div>
                     <div className={listItemClassName}>
-                      <div className="text-muted-foreground">Classification</div>
+                      <div className="text-muted-foreground">
+                        Classification
+                      </div>
                       <div className="font-medium">
                         {instructor.evaluation.rankingClassification}
                       </div>
@@ -243,7 +245,7 @@ export const InstructorDetailsDialog = ({
 
               <main className="space-y-5">
                 <div className={sectionClassName}>
-                  <div className="mb-2 flex items-center gap-2 font-medium text-emerald-950 dark:text-emerald-50">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-green-950 dark:text-green-50">
                     <Camera className="size-4" />
                     About
                   </div>
@@ -268,7 +270,7 @@ export const InstructorDetailsDialog = ({
                 </div>
 
                 <div className={sectionClassName}>
-                  <div className="mb-2 flex items-center gap-2 font-medium text-emerald-950 dark:text-emerald-50">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-green-950 dark:text-green-50">
                     <FileCheck2 className="size-4" />
                     Credentials
                   </div>
@@ -309,7 +311,7 @@ export const InstructorDetailsDialog = ({
                 </div>
 
                 <div className={sectionClassName}>
-                  <div className="mb-2 flex items-center gap-2 font-medium text-emerald-950 dark:text-emerald-50">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-green-950 dark:text-green-50">
                     <Award className="size-4" />
                     Evaluation
                   </div>
@@ -350,7 +352,7 @@ export const InstructorDetailsDialog = ({
                 </div>
 
                 <div className={sectionClassName}>
-                  <div className="mb-2 flex items-center gap-2 font-medium text-emerald-950 dark:text-emerald-50">
+                  <div className="mb-2 flex items-center gap-2 font-medium text-green-950 dark:text-green-50">
                     <GraduationCap className="size-4" />
                     Faculty Focus
                   </div>

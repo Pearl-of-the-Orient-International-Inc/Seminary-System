@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   BadgeCheck,
   CreditCard,
@@ -12,14 +11,6 @@ import {
 import type { Row } from "@tanstack/react-table";
 
 import { GlobalDataTable } from "@/components/DataTable";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -91,12 +82,14 @@ const statusActionCopy: Record<
   },
   REJECTED: {
     action: "Reject application",
-    description: "Rejects this application and sends the reason to the applicant.",
+    description:
+      "Rejects this application and sends the reason to the applicant.",
     title: "Reject application?",
   },
   CANCELLED: {
     action: "Cancel application",
-    description: "Cancels this application and removes it from active enrollment flow.",
+    description:
+      "Cancels this application and removes it from active enrollment flow.",
     title: "Cancel application?",
   },
 };
@@ -105,7 +98,9 @@ const Page = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [programFilter, setProgramFilter] = useState<ProgramFilter>("ALL");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
-  const [selectedRecord, setSelectedRecord] = useState<EnrollmentRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<EnrollmentRecord | null>(
+    null,
+  );
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [pendingStatusAction, setPendingStatusAction] = useState<{
     record: EnrollmentRecord;
@@ -130,14 +125,17 @@ const Page = () => {
         statusFilter === "ALL" || record.status === statusFilter;
       const matchesProgram =
         programFilter === "ALL" || record.programLevel === programFilter;
-      const matchesType = typeFilter === "ALL" || record.enrollmentType === typeFilter;
+      const matchesType =
+        typeFilter === "ALL" || record.enrollmentType === typeFilter;
 
       return matchesStatus && matchesProgram && matchesType;
     });
   }, [programFilter, records, statusFilter, typeFilter]);
 
   const totalApplications = records.length;
-  const enrolledCount = records.filter((record) => record.status === "Enrolled").length;
+  const enrolledCount = records.filter(
+    (record) => record.status === "Enrolled",
+  ).length;
   const paymentReviewCount = records.filter(
     (record) => record.status === "For Payment Review",
   ).length;
@@ -159,7 +157,8 @@ const Page = () => {
     if (!applicationId) {
       toast({
         title: "Application record missing",
-        description: "This enrollment row is not linked to a seminary application.",
+        description:
+          "This enrollment row is not linked to a seminary application.",
         variant: "warning",
       });
       return;
@@ -179,7 +178,8 @@ const Page = () => {
     if (status === "REJECTED" && !reason) {
       toast({
         title: "Rejection reason required",
-        description: "Please add a short reason before rejecting this application.",
+        description:
+          "Please add a short reason before rejecting this application.",
         variant: "warning",
       });
       return;
@@ -227,32 +227,14 @@ const Page = () => {
       <section className="space-y-6 p-10">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-2">
-            <h1 className="font-serif text-4xl text-emerald-950 dark:text-emerald-50">
+            <h1 className="font-serif text-4xl text-green-950 dark:text-green-50">
               Enrollment
             </h1>
             <p className="text-sm leading-6 text-muted-foreground">
-              Manage application progress, payment verification, and document completion
-              across the seminary enrollment pipeline.
+              Manage application progress, payment verification, and document
+              completion across the seminary enrollment pipeline.
             </p>
           </div>
-
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/admin/dashboard">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Admissions</BreadcrumbPage>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Enrollment</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -261,7 +243,7 @@ const Page = () => {
             value={totalApplications}
             description="Active cycle entries"
             icon={<UsersRound className="size-6" />}
-            accentClassName="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+            accentClassName="bg-green-500/10 text-green-700 dark:bg-green-400/10 dark:text-green-300"
           />
           <StatCard
             title="Enrolled"
@@ -288,30 +270,35 @@ const Page = () => {
 
         <EnrollmentOverview records={records} />
 
-        <Card className="overflow-hidden pt-0! border-emerald-950/10 shadow-sm dark:border-emerald-100/10">
-          <div className="border-b border-emerald-950/10 bg-linear-to-r from-emerald-950 to-emerald-900 px-6 py-5 dark:border-emerald-100/10">
+        <Card className="overflow-hidden pt-0! border-green-950/10 shadow-sm dark:border-green-100/10">
+          <div className="border-b border-green-950/10 bg-linear-to-r from-green-950 to-green-900 px-6 py-5 dark:border-green-100/10">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">
                 <h2 className="text-2xl font-semibold text-white">
                   Application Directory
                 </h2>
-                <p className="text-sm text-emerald-50/80">
-                  Review applicant progress, payment proof, and onboarding readiness
-                  in the same visual language as the rest of the seminary.
+                <p className="text-sm text-green-50/80">
+                  Review applicant progress, payment proof, and onboarding
+                  readiness in the same visual language as the rest of the
+                  seminary.
                 </p>
               </div>
 
-              <div className="grid gap-3 text-sm text-emerald-50/85 sm:grid-cols-3">
+              <div className="grid gap-3 text-sm text-green-50/85 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 backdrop-blur-sm">
-                  <div className="text-xs uppercase text-emerald-100/65">
+                  <div className="text-xs uppercase text-green-100/65">
                     Bachelor
                   </div>
                   <div className="mt-1 text-xl font-semibold">
-                    {records.filter((record) => record.programLevel === "Bachelor").length}
+                    {
+                      records.filter(
+                        (record) => record.programLevel === "Bachelor",
+                      ).length
+                    }
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 backdrop-blur-sm">
-                  <div className="text-xs uppercase text-emerald-100/65">
+                  <div className="text-xs uppercase text-green-100/65">
                     Graduate
                   </div>
                   <div className="mt-1 text-xl font-semibold">
@@ -323,12 +310,13 @@ const Page = () => {
                   </div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 backdrop-blur-sm">
-                  <div className="text-xs uppercase text-emerald-100/65">
+                  <div className="text-xs uppercase text-green-100/65">
                     Pending
                   </div>
                   <div className="mt-1 text-xl font-semibold">
                     {
-                      records.filter((record) => record.status === "Pending").length
+                      records.filter((record) => record.status === "Pending")
+                        .length
                     }
                   </div>
                 </div>
@@ -353,7 +341,9 @@ const Page = () => {
                 <>
                   <Select
                     value={programFilter}
-                    onValueChange={(value) => setProgramFilter(value as ProgramFilter)}
+                    onValueChange={(value) =>
+                      setProgramFilter(value as ProgramFilter)
+                    }
                   >
                     <SelectTrigger className="min-w-40">
                       <div className="flex items-center gap-2">
@@ -373,7 +363,9 @@ const Page = () => {
 
                   <Select
                     value={typeFilter}
-                    onValueChange={(value) => setTypeFilter(value as TypeFilter)}
+                    onValueChange={(value) =>
+                      setTypeFilter(value as TypeFilter)
+                    }
                   >
                     <SelectTrigger className="min-w-40">
                       <div className="flex items-center gap-2">
@@ -393,7 +385,9 @@ const Page = () => {
 
                   <Select
                     value={statusFilter}
-                    onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                    onValueChange={(value) =>
+                      setStatusFilter(value as StatusFilter)
+                    }
                   >
                     <SelectTrigger className="min-w-44">
                       <div className="flex items-center gap-2">

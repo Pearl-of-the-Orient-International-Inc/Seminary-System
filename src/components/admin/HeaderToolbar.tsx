@@ -79,7 +79,7 @@ export const HeaderToolbar = () => {
   return (
     <header className="sticky top-0 z-30 px-4 pt-4 md:px-6 md:pt-6">
       <div className="flex items-center gap-3 rounded-[1.1rem] border border-[#d8ddd5] bg-white/96 px-4 py-3 shadow-[0_10px_32px_rgba(15,54,24,0.08)] backdrop-blur dark:border-white/10 dark:bg-[#142019]/92 dark:shadow-[0_14px_40px_rgba(0,0,0,0.3)]">
-        <SidebarTrigger className="size-10 rounded-xl border border-[#dce4db] text-[#204f2a] hover:bg-[#eef3ec] dark:border-white/10 dark:text-[#d7e5d8] dark:hover:bg-white/10 md:hidden" />
+        <SidebarTrigger className="size-10 shrink-0 rounded-xl border border-[#dce4db] text-[#204f2a] hover:bg-[#eef3ec] dark:border-white/10 dark:text-[#d7e5d8] dark:hover:bg-white/10" />
 
         <div className="relative flex-1">
           <IconSearch className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[#66756a] dark:text-[#93a295]" />

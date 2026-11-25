@@ -17,6 +17,7 @@ type CellActionsProps = {
   onChangeStatus: (record: AttendanceRecord, status: AttendanceStatus) => void;
   onReset: (record: AttendanceRecord) => void;
   onViewMonthlyRecord: (record: AttendanceRecord) => void;
+  readOnly?: boolean;
 };
 
 export const CellActions = ({
@@ -24,6 +25,7 @@ export const CellActions = ({
   onChangeStatus,
   onReset,
   onViewMonthlyRecord,
+  readOnly = false,
 }: CellActionsProps) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
@@ -37,22 +39,22 @@ export const CellActions = ({
         <FileText className="size-4" />
         View monthly record
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => onChangeStatus(data, "Present")}>
+      {!readOnly && <DropdownMenuItem onClick={() => onChangeStatus(data, "Present")}>
         <CheckCircle2 className="size-4" />
         Mark present
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => onChangeStatus(data, "Absent")}>
+      </DropdownMenuItem>}
+      {!readOnly && <DropdownMenuItem onClick={() => onChangeStatus(data, "Absent")}>
         <CircleMinus className="size-4" />
         Mark absent
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => onChangeStatus(data, "Late")}>
+      </DropdownMenuItem>}
+      {!readOnly && <DropdownMenuItem onClick={() => onChangeStatus(data, "Late")}>
         <Clock3 className="size-4" />
         Mark late
-      </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => onReset(data)}>
+      </DropdownMenuItem>}
+      {!readOnly && <DropdownMenuItem onClick={() => onReset(data)}>
         <RotateCcw className="size-4" />
         Reset row
-      </DropdownMenuItem>
+      </DropdownMenuItem>}
     </DropdownMenuContent>
   </DropdownMenu>
 );

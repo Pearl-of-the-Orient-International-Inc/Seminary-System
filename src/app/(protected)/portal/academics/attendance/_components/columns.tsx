@@ -24,6 +24,7 @@ export type AttendanceStatus = (typeof attendanceStatusOptions)[number];
 
 export type AttendanceRecord = {
   id: string;
+  applicationId: string;
   order: number;
   rollNo: string;
   studentName: string;
@@ -72,6 +73,7 @@ const SortableHeader = ({
 type GetColumnsOptions = {
   onChangeStatus: (record: AttendanceRecord, status: AttendanceStatus) => void;
   onChangeRemarks: (record: AttendanceRecord, remarks: string) => void;
+  readOnly?: boolean;
 };
 
 const getInitials = (value: string) =>
@@ -85,6 +87,7 @@ const getInitials = (value: string) =>
 export const getColumns = ({
   onChangeStatus,
   onChangeRemarks,
+  readOnly = false,
 }: GetColumnsOptions): ColumnDef<AttendanceRecord>[] => [
   {
     accessorKey: "order",
@@ -119,6 +122,7 @@ export const getColumns = ({
       return (
         <Select
           value={row.original.status}
+          disabled={readOnly}
           onValueChange={(value) =>
             onChangeStatus(row.original, value as AttendanceStatus)
           }
@@ -153,6 +157,7 @@ export const getColumns = ({
     cell: ({ row }) => (
       <Input
         value={row.original.remarks}
+        disabled={readOnly}
         onChange={(event) =>
           onChangeRemarks(row.original, event.target.value)
         }

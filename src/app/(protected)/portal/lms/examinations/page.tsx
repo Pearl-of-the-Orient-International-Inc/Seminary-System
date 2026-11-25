@@ -7,22 +7,12 @@ import {
   BookCheck,
   CalendarCheck2,
   CheckSquare,
-  ClipboardCheck,
-  ExternalLink,
   PlayCircle,
   Plus,
 } from "lucide-react";
 import type { Row } from "@tanstack/react-table";
 
 import { GlobalDataTable } from "@/components/DataTable";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -178,7 +168,7 @@ const Page = () => {
         description: "Upcoming exams",
         icon: <CalendarCheck2 className="size-6" />,
         accentClassName:
-          "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
+          "bg-green-500/10 text-green-700 dark:bg-green-400/10 dark:text-green-300",
       },
       {
         title: "Ongoing Exams",
@@ -286,24 +276,6 @@ const Page = () => {
             Create, publish, and manage examinations.
           </p>
         </div>
-
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/admin/dashboard">Dashboard</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Learning Management System</BreadcrumbPage>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Examinations</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -322,7 +294,7 @@ const Page = () => {
                 <p className="text-sm font-medium text-slate-500">
                   {stat.title}
                 </p>
-                <p className="text-4xl font-semibold tracking-tight text-slate-900">
+                <p className="text-3xl font-semibold tracking-tight text-slate-900">
                   {stat.value}
                 </p>
                 <p className="text-xs text-slate-500">{stat.description}</p>
@@ -423,28 +395,6 @@ const Page = () => {
               await examinationsQuery.refetch();
             }}
           />
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/70 bg-blue-50/60 py-0 shadow-sm">
-        <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex size-10 items-center justify-center rounded-full bg-blue-600 text-white">
-              <ClipboardCheck className="size-5" />
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium text-slate-900">Examination Workflow</p>
-              <p className="text-sm text-slate-600">
-                Create exam, add questions, assign to seminarians, publish,
-                evaluate, and release results.
-              </p>
-            </div>
-          </div>
-
-          <Button variant="outline" className="border-blue-200 bg-white">
-            View Workflow Guide
-            <ExternalLink className="size-4" />
-          </Button>
         </CardContent>
       </Card>
 
@@ -602,6 +552,6 @@ const ExaminationPreviewSheet = ({
 const PreviewRow = ({ label, value }: { label: string; value: string }) => (
   <div className="flex items-start justify-between gap-4 px-4 py-3 text-sm">
     <p className="text-muted-foreground">{label}</p>
-    <p className="max-w-64 break-words text-right font-medium">{value}</p>
+    <p className="max-w-64 wrap-break-word text-right font-medium">{value}</p>
   </div>
 );

@@ -1,45 +1,40 @@
+/* eslint-disable @next/next/no-img-element */
+"use client";
+
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CalendarCheck, ChevronLeft, ChevronRight, ClipboardCheck, MonitorCheck, Quote, UserCog } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { usePublicSeminaryInstructorsQuery } from "@/features/seminary/seminary.hooks";
+import {
+  ArrowRight,
+  CalendarCheck,
+  ClipboardCheck,
+  MonitorCheck,
+  Quote,
+  UserCog,
+} from "lucide-react";
 
-const facultyMembers = [
-  {
-    name: "Rev. Dr. Samuel P. Reyes",
-    role: "President / Professor of Theology",
-    degree: "Ph.D. Theology",
-    experience: "30+ Years in Ministry",
-    initials: "SR",
-  },
-  {
-    name: "Dr. Maria Lourdes Tan",
-    role: "Dean of Academics",
-    degree: "Ph.D. Christian Education",
-    experience: "20+ Years in Ministry",
-    initials: "MT",
-  },
-  {
-    name: "Rev. Dr. Daniel C. Mercado",
-    role: "Professor of Pastoral Ministry",
-    degree: "D.Min. Pastoral Theology",
-    experience: "25+ Years in Ministry",
-    initials: "DM",
-  },
-  {
-    name: "Dr. Rachel Ann Baloy",
-    role: "Professor of Counseling",
-    degree: "Ph.D. Counseling",
-    experience: "15+ Years in Ministry",
-    initials: "RB",
-  },
-  {
-    name: "Rev. Capt. Elmer Dela Cruz",
-    role: "Director, Chaplaincy Programs",
-    degree: "Th.M. Chaplaincy",
-    experience: "20+ Years in Chaplaincy",
-    initials: "EC",
-  },
-];
+const initials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
+const labelFor = (value: string) =>
+  value
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (character) => character.toUpperCase());
 
 const quickAccessLinks = [
   {
@@ -110,6 +105,9 @@ const announcements = [
 ];
 
 const Faculty = () => {
+  const instructorsQuery = usePublicSeminaryInstructorsQuery();
+  const facultyMembers = instructorsQuery.data?.data ?? [];
+
   return (
     <section className="bg-white px-6 py-16 text-[#0b3327] lg:px-20">
       <div className="container mx-auto">
@@ -130,55 +128,63 @@ const Faculty = () => {
           </Link>
         </div>
 
-        <div className="relative mt-8">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Previous faculty"
-            className="absolute -left-5 top-24 z-10 hidden size-10 rounded-full border border-[#0b3327]/10 bg-white text-[#0b4b39] shadow-md hover:bg-[#f5b739] hover:text-[#073722] lg:inline-flex"
-          >
-            <ChevronLeft className="size-5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Next faculty"
-            className="absolute -right-5 top-24 z-10 hidden size-10 rounded-full border border-[#0b3327]/10 bg-white text-[#0b4b39] shadow-md hover:bg-[#f5b739] hover:text-[#073722] lg:inline-flex"
-          >
-            <ChevronRight className="size-5" />
-          </Button>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: facultyMembers.length > 3,
+            slidesToScroll: 1,
+          }}
+          className="relative mt-8 px-1 md:px-14"
+        >
+          <CarouselContent>
             {facultyMembers.map((member) => (
-              <article
-                key={member.name}
-                className="overflow-hidden rounded-md border border-[#0b3327]/10 bg-white shadow-[0_10px_26px_rgba(10,51,39,0.08)]"
+              <CarouselItem
+                key={member.id}
+                className="basis-[88%] sm:basis-1/2 lg:basis-1/3"
               >
-                <div className="flex h-36 items-end justify-center bg-[linear-gradient(135deg,#eee8dd,#ffffff_48%,#d6cdc0)] px-6 pt-5">
-                  <div className="flex size-28 items-center justify-center rounded-t-full bg-[linear-gradient(160deg,#123d31,#0b4b39)] text-3xl font-bold text-[#f5b739] shadow-[0_12px_28px_rgba(10,51,39,0.22)]">
-                    {member.initials}
+                <article className="min-w-0">
+                  <div className="overflow-hidden rounded-lg bg-[#ececec]">
+                    <div className="flex h-120 items-center justify-center bg-[linear-gradient(135deg,#e5e7eb,#f8fafc_48%,#d1d5db)]">
+                      {member.formalPhotoUrl ? (
+                        <img
+                          src={member.formalPhotoUrl}
+                          alt={member.name}
+                          className="h-full w-full object-cover object-top"
+                        />
+                      ) : (
+                        <div className="flex size-32 items-center justify-center rounded-full bg-[#0b4b39] text-4xl font-bold text-[#f5b739]">
+                          {initials(member.name)}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-sm font-extrabold leading-tight">
-                    {member.name}
-                  </h3>
-                  <p className="mt-2 text-xs font-bold leading-5 text-[#273f37]">
-                    {member.role}
-                  </p>
-                  <p className="mt-2 text-xs leading-5 text-[#31463f]">
-                    {member.degree}
-                  </p>
-                  <p className="text-xs leading-5 text-[#31463f]">
-                    {member.experience}
-                  </p>
-                </div>
-              </article>
+                  <div className="px-0 pb-1 pt-4">
+                    <h3 className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-base font-semibold leading-tight text-slate-900">
+                      <span>
+                        {member.name},{" "}
+                        {member.professionalTitle || labelFor(member.rank)}
+                      </span>
+                    </h3>
+                    <p className="mt-2 text-xs">
+                      {(member.areasOfExpertise.length > 0
+                        ? member.areasOfExpertise
+                        : member.teachingPrograms.map(labelFor)
+                      ).join(", ")}
+                    </p>
+                  </div>
+                </article>
+              </CarouselItem>
             ))}
-          </div>
-        </div>
+          </CarouselContent>
+          <CarouselPrevious className="-left-1 hidden size-10 border border-[#0b3327]/10 bg-white text-[#0b4b39] shadow-md hover:bg-[#f5b739] hover:text-[#073722] md:inline-flex" />
+          <CarouselNext className="-right-1 hidden size-10 border border-[#0b3327]/10 bg-white text-[#0b4b39] shadow-md hover:bg-[#f5b739] hover:text-[#073722] md:inline-flex" />
+          {!instructorsQuery.isLoading && facultyMembers.length === 0 && (
+            <p className="rounded-md border border-dashed border-[#0b3327]/20 p-6 text-sm text-[#31463f]">
+              Faculty profiles will appear here once active instructors are
+              added.
+            </p>
+          )}
+        </Carousel>
 
         <div className="mt-10 grid gap-5 lg:grid-cols-[1fr_1fr_1.08fr_0.95fr]">
           <div className="rounded-md border border-[#0b3327]/10 bg-white p-6 shadow-[0_12px_30px_rgba(10,51,39,0.06)]">

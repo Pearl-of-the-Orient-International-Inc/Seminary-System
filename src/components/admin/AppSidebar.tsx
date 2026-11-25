@@ -23,6 +23,7 @@ import {
   IconBriefcase,
   IconBuilding,
   IconCalendar,
+  IconCertificate,
   IconTopologyStar,
   IconTableColumn,
 } from "@tabler/icons-react";
@@ -84,6 +85,11 @@ const sections: SidebarSection[] = [
         icon: IconUsers,
       },
       {
+        title: "Certifications & Records",
+        url: "/portal/certifications-records",
+        icon: IconCertificate,
+      },
+      {
         title: "Enrollment",
         url: "/portal/enrollment",
         icon: IconBuilding,
@@ -129,11 +135,6 @@ const sections: SidebarSection[] = [
         icon: IconUserStar,
       },
       {
-        title: "Document Requests",
-        url: "/portal/document-requests",
-        icon: IconFileText,
-      },
-      {
         title: "Fees & Payments",
         url: "/portal/fee-collection",
         icon: IconCreditCard,
@@ -142,6 +143,11 @@ const sections: SidebarSection[] = [
         title: "Thesis & Dissertation",
         url: "/portal/academics/thesis-dissertation",
         icon: IconReceipt2,
+      },
+      {
+        title: "Document Requests",
+        url: "/portal/document-requests",
+        icon: IconFileText,
       },
     ],
   },
@@ -286,12 +292,12 @@ export const AppSidebar = ({
     <Sidebar collapsible="icon" className="border-r-0" {...props}>
       <SidebarHeader className="border-b border-white/8 bg-[#173f20] px-4 py-3 text-white">
         {isCollapsed ? (
-          <div className="flex relative size-6 items-center justify-center">
+          <div className="relative mx-auto flex size-10 items-center justify-center">
             <Image
               src="/main/logo.png"
               alt="Pearl of the Orient"
               fill
-              className="object-contain rounded-full"
+            className="rounded-full object-contain"
             />
           </div>
         ) : (
@@ -322,7 +328,7 @@ export const AppSidebar = ({
         )}
       </SidebarHeader>
 
-      <SidebarContent className="bg-[#173f20] px-3 py-4 scrollbar-hide text-white">
+      <SidebarContent className={cn("scrollbar-hide bg-[#173f20] px-3 py-4 text-white", isCollapsed && "px-2") }>
         <div className="space-y-5">
           {visibleSections.map((section) => (
             <section
@@ -356,7 +362,7 @@ export const AppSidebar = ({
                         isActive={active}
                         className={cn(
                           "h-10 rounded-xl border border-transparent px-3 text-white transition-all hover:bg-white/6 hover:text-white data-[active=true]:bg-[#6ea775] data-[active=true]:text-white",
-                          isCollapsed && "justify-center px-0",
+                          isCollapsed && "mx-auto size-11! justify-center! p-0! [&>svg]:size-5.5!",
                           !active && "bg-transparent",
                         )}
                       >

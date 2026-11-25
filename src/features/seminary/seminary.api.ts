@@ -41,6 +41,9 @@ import type {
   SeminaryDocumentRequestTypesResponse,
   SeminaryCredentialDocumentResponse,
   SeminaryCredentialDocumentsResponse,
+  SeminaryCredentialDocumentsPagedResponse,
+  SeminaryAttendanceResponse,
+  SeminaryAttendanceHistoryResponse,
   SeminaryCredentialDocumentType,
   MemberCredentialDocumentResponse,
   SeminaryGradeConfigurationPayload,
@@ -61,6 +64,7 @@ import type {
   SeminaryInstructorResponse,
   SeminaryInstructorInviteResponse,
   SeminaryInstructorsResponse,
+  SeminaryPublicInstructorsResponse,
   SeminaryInstructorStatus,
   SeminaryStudyMaterialPayload,
   SeminaryStudyMaterialResponse,
@@ -705,6 +709,13 @@ export async function getSeminaryInstructors(params?: {
   return data;
 }
 
+export async function getPublicSeminaryInstructors() {
+  const { data } = await api.get<SeminaryPublicInstructorsResponse>(
+    "/seminary/public/instructors",
+  );
+  return data;
+}
+
 export async function getSeminaryInstructor(id: string) {
   const { data } = await api.get<SeminaryInstructorResponse>(
     `/seminary/instructors/${encodeURIComponent(id)}`,
@@ -1066,6 +1077,20 @@ export async function getSeminaryCredentialDocuments({
 
   return data;
 }
+
+export async function getAllSeminaryCredentialDocuments(params?: { page?: number; limit?: number; search?: string; type?: SeminaryCredentialDocumentType }) {
+  const { data } = await api.get<SeminaryCredentialDocumentsPagedResponse>("/seminary/credential-documents", { params });
+  return data;
+}
+
+export async function generateSeminaryTranscriptBatch(studentIds: string[]) {
+  const { data } = await api.post<SeminaryCredentialDocumentsResponse>("/seminary/credential-documents/transcripts/batch", { studentIds });
+  return data;
+}
+
+export async function getSeminaryAttendance(params: { academicYear: string; program: string; courseId: string; date: string }) { const { data } = await api.get<SeminaryAttendanceResponse>("/seminary/attendance", { params }); return data; }
+export async function getSeminaryAttendanceHistory(params: { applicationId: string; month: string }) { const { data } = await api.get<SeminaryAttendanceHistoryResponse>(`/seminary/attendance/history/${params.applicationId}`, { params: { month: params.month } }); return data; }
+export async function saveSeminaryAttendance(payload: { academicYear: string; program: string; courseId: string; date: string; entries: Array<{ applicationId: string; status: "PRESENT" | "ABSENT" | "LATE"; remarks?: string }> }) { const { data } = await api.put("/seminary/attendance", payload); return data; }
 
 export async function verifySeminaryCredentialDocument(token: string) {
   const { data } = await api.get<SeminaryCredentialDocumentResponse>(

@@ -24,7 +24,7 @@ export const StatCard = ({
       </div>
       <div className="space-y-1">
         <p className="text-sm font-medium">{title}</p>
-        <div className="text-3xl font-semibold tracking-tight">{value}</div>
+        <div className="text-2xl font-semibold tracking-tight">{value}</div>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
     </CardContent>

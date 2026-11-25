@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   BookCopy,
   CheckCircle2,
@@ -13,14 +12,6 @@ import {
 import type { Row } from "@tanstack/react-table";
 
 import { GlobalDataTable } from "@/components/DataTable";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -55,7 +46,10 @@ import {
   type CourseRecord,
   type CourseStatus,
 } from "./_components/columns";
-import { CourseDialog, type CourseDialogValues } from "./_components/course-dialog";
+import {
+  CourseDialog,
+  type CourseDialogValues,
+} from "./_components/course-dialog";
 import { StatCard } from "./_components/stat-card";
 
 type StatusFilter = "ALL" | CourseStatus;
@@ -127,7 +121,10 @@ const getCourseSubjects = (course: SeminaryCourse): SeminaryCourseSubject[] =>
         },
       ];
 
-const toCourseRecord = (course: SeminaryCourse, index: number): CourseRecord => {
+const toCourseRecord = (
+  course: SeminaryCourse,
+  index: number,
+): CourseRecord => {
   const subjects = getCourseSubjects(course).map((subject) => ({
     ...subject,
     date: subject.date ?? "",
@@ -166,7 +163,9 @@ const Page = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [modalityFilter, setModalityFilter] = useState<ModalityFilter>("ALL");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<CourseRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<CourseRecord | null>(
+    null,
+  );
   const { toast } = useToast();
 
   const coursesQuery = useSeminaryCoursesQuery({ limit: 100, page: 1 });
@@ -192,12 +191,14 @@ const Page = () => {
   }, [courses, modalityFilter, statusFilter]);
 
   const totalCourses = courses.length;
-  const activeCourses = courses.filter((course) => course.status === "Active").length;
+  const activeCourses = courses.filter(
+    (course) => course.status === "Active",
+  ).length;
   const inactiveCourses = courses.filter(
     (course) => course.status === "Inactive",
   ).length;
-  const onlineCourses = courses.filter(
-    (course) => course.modalities.includes("Online"),
+  const onlineCourses = courses.filter((course) =>
+    course.modalities.includes("Online"),
   ).length;
 
   const handleCreate = () => {
@@ -306,24 +307,6 @@ const Page = () => {
               Courses
             </h1>
           </div>
-
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/admin/dashboard">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Academics</BreadcrumbPage>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Courses</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -339,7 +322,7 @@ const Page = () => {
             value={activeCourses}
             description="Currently active"
             icon={<CheckCircle2 className="size-6" />}
-            accentClassName="bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300"
+            accentClassName="bg-green-500/10 text-green-700 dark:bg-green-400/10 dark:text-green-300"
           />
           <StatCard
             title="Inactive Courses"
@@ -366,7 +349,9 @@ const Page = () => {
               exportFileName="courses"
               filterPlaceholder="Search courses..."
               emptyMessage={
-                coursesQuery.isLoading ? "Loading courses..." : "No courses found."
+                coursesQuery.isLoading
+                  ? "Loading courses..."
+                  : "No courses found."
               }
               pageSizeOptions={[8, 10, 20]}
               toolbarActions={

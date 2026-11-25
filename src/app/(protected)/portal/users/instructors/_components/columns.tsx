@@ -61,7 +61,7 @@ export const columns: ColumnDef<InstructorRecord>[] = [
 
       return (
         <div className="flex min-w-50 items-center gap-3">
-          <Avatar size="lg" className="ring-2 ring-emerald-950/8">
+          <Avatar size="lg" className="ring-2 ring-green-950/8">
             {record.formalPhotoUrl ? (
               <AvatarImage
                 src={record.formalPhotoUrl}
@@ -69,7 +69,7 @@ export const columns: ColumnDef<InstructorRecord>[] = [
                 className="object-cover"
               />
             ) : null}
-            <AvatarFallback className="bg-emerald-900/10 font-semibold text-emerald-900 dark:bg-emerald-100/10 dark:text-emerald-100">
+            <AvatarFallback className="bg-green-900/10 font-semibold text-green-900 dark:bg-green-100/10 dark:text-green-100">
               {getInitials(record.name)}
             </AvatarFallback>
           </Avatar>

@@ -11,22 +11,22 @@ type GradingScaleCardProps = {
 };
 
 export const GradingScaleCard = ({ rows }: GradingScaleCardProps) => (
-  <Card className="overflow-hidden pt-0! gap-0! border-emerald-950/10 shadow-sm dark:border-emerald-100/10">
-    <div className="border-b border-emerald-950/10 bg-linear-to-r from-emerald-950 to-emerald-900 px-6 py-5 dark:border-emerald-100/10">
-      <div className="inline-flex items-center gap-2 text-xs uppercase text-emerald-100/70">
+  <Card className="overflow-hidden pt-0! gap-0! border-green-950/10 shadow-sm dark:border-green-100/10 h-fit">
+    <div className="border-b border-green-950/10 bg-linear-to-r from-green-950 to-green-900 px-6 py-5 dark:border-green-100/10">
+      <div className="inline-flex items-center gap-2 text-xs uppercase text-green-100/70">
         <ScrollText className="size-3.5" />
         Grading Scale
       </div>
       <h2 className="mt-2 text-2xl font-semibold text-white">
         Grade Equivalency Matrix
       </h2>
-      <p className="mt-1 text-sm text-emerald-50/80">
+      <p className="mt-1 text-sm text-green-50/80">
         Standard numeric scale used across coursework and registrar reports.
       </p>
     </div>
 
     <CardContent className="p-0">
-      <div className="grid grid-cols-[0.9fr_1.2fr_1.4fr] border-b bg-emerald-950/3 px-6 py-3 text-xs font-semibold uppercase text-muted-foreground dark:bg-emerald-100/4">
+      <div className="grid grid-cols-[0.9fr_1.2fr_1.4fr] border-b bg-green-950/3 px-6 py-3 text-xs font-semibold uppercase text-muted-foreground dark:bg-green-100/4">
         <div>Equivalent</div>
         <div>Percentage Range</div>
         <div>Remarks</div>
