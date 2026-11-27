@@ -362,10 +362,10 @@ export interface SeminaryCourseSubject {
   subjectName: string;
   units: number;
   time?: string;
-  startTime: string;
-  endTime: string;
-  professor: string;
-  modality: SeminaryCourseModality;
+  startTime?: string;
+  endTime?: string;
+  professor?: string;
+  modality?: SeminaryCourseModality;
 }
 
 export interface SeminaryCoursePayload {

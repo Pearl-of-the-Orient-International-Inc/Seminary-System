@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,10 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSeminaryInstructorsQuery } from "@/features/seminary/seminary.hooks";
-
 import {
-  courseModalityOptions,
   courseProgramOptions,
   courseStatusOptions,
   type CourseRecord,
@@ -41,13 +38,8 @@ const formSchema = z.object({
   subjects: z
     .array(
       z.object({
-        date: z.string().trim().min(1, "Date is required."),
         subjectName: z.string().trim().min(1, "Subject name is required."),
         units: z.coerce.number().min(1, "Units must be at least 1."),
-        startTime: z.string().trim().min(1, "Start time is required."),
-        endTime: z.string().trim().min(1, "End time is required."),
-        professor: z.string().trim().min(1, "Professor is required."),
-        modality: z.enum(courseModalityOptions),
       }),
     )
     .min(1, "Add at least one subject."),
@@ -65,13 +57,8 @@ type CourseDialogProps = {
 };
 
 const defaultSubject: CourseDialogInputValues["subjects"][number] = {
-  date: "",
   subjectName: "",
   units: 3,
-  startTime: "",
-  endTime: "",
-  professor: "",
-  modality: "Online",
 };
 
 export const CourseDialog = ({
@@ -81,11 +68,6 @@ export const CourseDialog = ({
   record,
   submitting = false,
 }: CourseDialogProps) => {
-  const instructorsQuery = useSeminaryInstructorsQuery({
-    limit: 100,
-    page: 1,
-    status: "ACTIVE",
-  });
   const form = useForm<CourseDialogInputValues, unknown, CourseDialogValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -101,11 +83,6 @@ export const CourseDialog = ({
     control: form.control,
     name: "subjects",
   });
-  const instructors = useMemo(
-    () => instructorsQuery.data?.data ?? [],
-    [instructorsQuery.data?.data],
-  );
-
   useEffect(() => {
     if (!open) return;
 
@@ -114,7 +91,9 @@ export const CourseDialog = ({
       courseCode: record?.courseCode ?? "",
       program: record?.program ?? "Certificate",
       status: record?.status ?? "Active",
-      subjects: record?.subjects.length ? record.subjects : [defaultSubject],
+      subjects: record?.subjects.length
+        ? record.subjects.map(({ subjectName, units }) => ({ subjectName, units }))
+        : [defaultSubject],
     });
   }, [form, open, record]);
 
@@ -250,27 +229,7 @@ export const CourseDialog = ({
                     </Button>
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <Controller
-                      control={form.control}
-                      name={`subjects.${index}.date`}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Date</FieldLabel>
-                          <Input
-                            type="date"
-                            name={field.name}
-                            ref={field.ref}
-                            onBlur={field.onBlur}
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
+                  <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
                     <Controller
                       control={form.control}
                       name={`subjects.${index}.subjectName`}
@@ -284,54 +243,6 @@ export const CourseDialog = ({
                         </Field>
                       )}
                     />
-                    <Controller
-                      control={form.control}
-                      name={`subjects.${index}.professor`}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Professor</FieldLabel>
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            disabled={instructorsQuery.isLoading}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue
-                                placeholder={
-                                  instructorsQuery.isLoading
-                                    ? "Loading instructors..."
-                                    : "Select professor"
-                                }
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {field.value &&
-                                !instructors.some(
-                                  (instructor) => instructor.name === field.value,
-                                ) && (
-                                  <SelectItem value={field.value}>
-                                    {field.value}
-                                  </SelectItem>
-                                )}
-                              {instructors.map((instructor) => (
-                                <SelectItem
-                                  key={instructor.id}
-                                  value={instructor.name}
-                                >
-                                  {instructor.name} - {instructor.facultyId}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-                  </div>
-
-                  <div className="mt-4 grid gap-4 md:grid-cols-4">
                     <Controller
                       control={form.control}
                       name={`subjects.${index}.units`}
@@ -351,75 +262,6 @@ export const CourseDialog = ({
                               field.onChange(event.target.value)
                             }
                           />
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-                    <Controller
-                      control={form.control}
-                      name={`subjects.${index}.startTime`}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Start Time</FieldLabel>
-                          <Input
-                            type="time"
-                            step={300}
-                            name={field.name}
-                            ref={field.ref}
-                            onBlur={field.onBlur}
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-                    <Controller
-                      control={form.control}
-                      name={`subjects.${index}.endTime`}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>End Time</FieldLabel>
-                          <Input
-                            type="time"
-                            step={300}
-                            name={field.name}
-                            ref={field.ref}
-                            onBlur={field.onBlur}
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-                    <Controller
-                      control={form.control}
-                      name={`subjects.${index}.modality`}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel>Modality</FieldLabel>
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select modality" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {courseModalityOptions.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
                           )}

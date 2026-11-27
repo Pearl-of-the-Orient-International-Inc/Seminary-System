@@ -207,7 +207,7 @@ const Page = () => {
           .filter(
             (subject) =>
               !isInstructor ||
-              subject.professor.toLowerCase() === uploaderName.toLowerCase(),
+              subject.professor?.toLowerCase() === uploaderName.toLowerCase(),
           )
           .map((subject) => subject.subjectName)
           .filter(Boolean),

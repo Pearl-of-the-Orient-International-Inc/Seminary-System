@@ -75,12 +75,6 @@ const modalityLabelMap: Record<SeminaryCourseModality, CourseModality> = {
   BOTH: "Both",
 };
 
-const modalityValueMap: Record<CourseModality, SeminaryCourseModality> = {
-  "Face to Face": "FACE_TO_FACE",
-  Online: "ONLINE",
-  Both: "BOTH",
-};
-
 const statusLabelMap: Record<SeminaryCourseStatus, CourseStatus> = {
   ACTIVE: "Active",
   INACTIVE: "Inactive",
@@ -128,7 +122,10 @@ const toCourseRecord = (
   const subjects = getCourseSubjects(course).map((subject) => ({
     ...subject,
     date: subject.date ?? "",
-    modality: modalityLabelMap[subject.modality],
+    startTime: subject.startTime ?? "",
+    endTime: subject.endTime ?? "",
+    professor: subject.professor ?? "TBA",
+    modality: modalityLabelMap[subject.modality ?? course.modality],
   }));
   const units = subjects.reduce((total, subject) => total + subject.units, 0);
   const modalities = Array.from(
@@ -152,10 +149,7 @@ const toCoursePayload = (values: CourseDialogValues) => ({
   courseName: values.courseName,
   courseCode: values.courseCode,
   program: programValueMap[values.program],
-  subjects: values.subjects.map((subject) => ({
-    ...subject,
-    modality: modalityValueMap[subject.modality],
-  })),
+  subjects: values.subjects,
   status: statusValueMap[values.status],
 });
 
